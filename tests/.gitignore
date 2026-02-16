@@ -1,0 +1,7 @@
+*.log
+makefile
+pytest.ini
+prof
+.pytest_cache
+.hypothesis
+.ipynb*

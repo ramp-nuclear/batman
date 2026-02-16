@@ -1,0 +1,9 @@
+dependencies:
+  - scipy
+  - numpy
+  - matplotlib
+  - networkx
+  - toolz
+  - more-itertools
+  - multipledispatch
+  - dask
