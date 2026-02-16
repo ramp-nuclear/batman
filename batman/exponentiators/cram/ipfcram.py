@@ -22,7 +22,7 @@ def _ipf_cram(m: sp.csr_matrix, v: np.ndarray, *,
               solver: Callable, **kwargs):
     ident = sp.eye(m.shape[0], format='csr')
     for alpha, theta in zip(alpha, theta):
-        v += 2 * np.XXXX(alpha * solver(m - theta * ident, v, **kwargs))
+        v += 2 * np.real(alpha * solver(m - theta * ident, v, **kwargs))
     return v * alpha0
 
 
@@ -76,7 +76,7 @@ class IPFCramSolver:
                 Therefore, one should choose their solver carefully.
                 [1] Maria Pusa & Jaakko Leppänen (2013) Solving Linear Systems
                 with Sparse Gaussian Elimination in the Chebyshev Rational
-                Approximation Method, Nuclear Science and Engineering, XXX:3, 250-258,
+                Approximation Method, Nuclear Science and Engineering, 175:3, 250-258,
                 DOI: 10.13182/NSE12-52
 
         **kwargs : Keyword arguments to send to the solver.

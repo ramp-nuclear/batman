@@ -35,10 +35,7 @@ modlogger = logging.getLogger('batman.solve')
 def depstep_single(data: RunData, t: Second, norm: FluxFunc, *,
                    expo: Exponentiator,
                    threshold: float) -> Mixture:
-    """Wrapper to the serial single depstep function. That function is designed
-    to be testable, so it does not XXXX with RunData. However, when mapping
-    over EasyData, it is easier to work through a function that accepts
-    RunData.
+    """Perform a depletion step for a single component's RunData.
 
     Parameters
     ----------
@@ -190,7 +187,7 @@ class BurnResult:
         """Reactivity change rate, in PCM per second.
         Returns None if k or dkdt are unknown.
 
-        dr/dt = dr/dk * dk/dt = (XXX/k**2) * dk/dt
+        dr/dt = dr/dk * dk/dt = (1e5/k**2) * dk/dt
 
         """
         try:

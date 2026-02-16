@@ -17,7 +17,7 @@ The design goals for this package are:
 1. Code must be stable for large time steps. (Partially Achieved, depends on 
    power renormalization requirements.)
 1. Code must be abstract and use simple external API. (Under Review)
-1. Isotopic data must allow for both fudged and XXXX database built data. (Achieved!)
+1. Isotopic data must allow for both fudged and real database built data. (Achieved!)
 1. Code must pass high standards (Under Review and Not Finished):
     a. Code must be fully documented. Type hinting counts for simple functions.
     b. Code must be modular and modules should be as implementation independent 

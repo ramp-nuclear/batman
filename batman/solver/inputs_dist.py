@@ -1,7 +1,7 @@
 """Distributed version of the common inputs. This is used so that they will
 have similar API but with a distributed workload in input generation.
 
-The only XXXX thing to note here is DistEasyData. Everything else are just
+The only real thing to note here is DistEasyData. Everything else are just
 helper functions for its construction. Constructing a DistEasyData is complex,
 since you need to create a Dask Bag while minimizing the cost. Bags are not
 designed for this use case, they're mostly designed for parsing files as an
