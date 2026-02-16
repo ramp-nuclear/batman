@@ -13,12 +13,11 @@ import scipy.sparse.linalg as sla
 from batman.exponentiators.protocol import FluxFunc
 from batman.units import Second
 
-
 __all__ = ["IPFCramSolver", '_ipf_cram']
 
 
 def _ipf_cram(m: sp.csr_matrix, v: np.ndarray, *,
-              alpha0: complex, alpha: Iterable[complex], theta: Iterable[complex],
+              alpha0: float, alpha: Iterable[complex], theta: Iterable[complex],
               solver: Callable, **kwargs):
     ident = sp.eye(m.shape[0], format='csr')
     for alpha, theta in zip(alpha, theta):
