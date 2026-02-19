@@ -5,3 +5,4 @@ prof
 .pytest_cache
 .hypothesis
 .ipynb*
+test_data

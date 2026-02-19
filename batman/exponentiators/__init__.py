@@ -8,7 +8,7 @@ Examples
 >>> import scipy.sparse as sp
 >>> import numpy as np
 >>> d = sp.csr_matrix(np.array([[-np.log(2), 0.], [0., -np.log(2)]]))
->>> r = sp.csr_matrix(np.zeros((2,2))
+>>> r = sp.csr_matrix(np.zeros((2,2)))
 >>> f = lambda x: 0.
 >>> n0 = np.ones(2)
 >>> dt = 1
