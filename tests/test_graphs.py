@@ -14,8 +14,8 @@ from batman.graphs.filters import descendents_subgraph, \
     whitelist_filter
 from batman.graphs.matgen import graph_to_sparse_matrix
 from batman.graphs.reaction import ReactionGraph
-from endf.decay import DecayProcess
-from endf.modes import BETA_M, ALPHA, SPF
+from ramp_endf.decay import DecayProcess
+from ramp_endf.modes import BETA_M, ALPHA, SPF
 from reactions import Reaction, NGamma, Fission, ProtoReaction
 from reactions import ReactionRate
 

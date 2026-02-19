@@ -7,7 +7,7 @@ from typing import Set, Hashable, Any, Callable
 import networkx as nx
 from toolz import identity
 
-from endf.modes import SPF
+from ramp_endf.modes import SPF
 from batman.graphs.types import BatmanGraph
 
 __all__ = ['GraphFilter', 'whitelist_filter',

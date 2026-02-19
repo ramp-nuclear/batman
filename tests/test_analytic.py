@@ -12,7 +12,7 @@ import hypothesis.strategies as st
 import numpy as np
 import pytest
 from coremaker.materials.mixture import Mixture
-from endf.decay import DecayProcess, parse_decay_processes
+from ramp_endf.decay import DecayProcess, parse_decay_processes
 from hypothesis import given, seed, settings
 from isotopes import I135, U235, Xe135
 from reactions import Fission, NGamma, ProtoReaction, Reaction, ReactionRate

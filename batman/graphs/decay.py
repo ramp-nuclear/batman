@@ -9,9 +9,9 @@ from typing import Any, Hashable, Tuple, FrozenSet, Union, Optional
 import networkx as nx
 
 from batman.units import Second
-from endf import Evaluation
-from endf.decay import DecayProcess, Decay, SPFData, parse_decay_processes
-from endf.util import halflife_to_rate
+from ramp_endf import Evaluation
+from ramp_endf.decay import DecayProcess, Decay, SPFData, parse_decay_processes
+from ramp_endf.util import halflife_to_rate
 from isotopes import ZAID
 
 DECAY = 'radioactive decay'
@@ -105,7 +105,7 @@ class DecayGraph(nx.MultiDiGraph):
         ----------
         process - The decay process used to generate the edge.
         ignore_zero - Flag to ignore decay paths with 0 halflife (yes, these
-                      exist in ENDF7.1. See, for example, W182->Hf178)
+                      exist in endf7.1. See, for example, W182->Hf178)
 
         Raises
         ------
