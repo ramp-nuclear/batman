@@ -34,6 +34,9 @@ Day = float
 test_data_dir = Path(dirname(__file__)) / 'test_data'
 many_analytics = pytest.mark.many
 
+data_missing = not all((test_data_dir / fname).exists() 
+                       for fname in ["dec-053_I_135.endf", 'dec-054_Xe_135.endf'])
+
 
 # noinspection PyPep8Naming
 @pytest.fixture(scope='module')
@@ -68,6 +71,9 @@ reac_rates = st.just(0.) | st.floats(min_value=1e-9, max_value=1e-2)
 power_range = st.just(0.) | st.floats(min_value=1., max_value=20.)
 
 
+@pytest.mark.skipif(data_missing, 
+                    reason="Missing decay data. Use the download script under "
+                          f"{test_data_dir} to obtain the missing files")
 @settings(max_examples=100)
 @given(t=time_range_seconds)
 def test_analytic_decay_is_exponential_down(
@@ -131,6 +137,9 @@ def _iodine_den(Ieq, I0, decay_I, t) -> float:
 
 
 # noinspection PyPep8Naming
+@pytest.mark.skipif(data_missing, 
+                    reason="Missing decay data. Use the download script under "
+                          f"{test_data_dir} to obtain the missing files")
 @settings(max_examples=100)
 @given(I0=density_range, t=st.floats(min_value=1., max_value=30 * 24 * 3600.),
        rateI=reac_rates)
@@ -151,6 +160,9 @@ def test_I135_analytic_solution(iodine_decay, I0, rateI, t):
 
 
 # noinspection PyPep8Naming
+@pytest.mark.skipif(data_missing, 
+                    reason="Missing decay data. Use the download script under "
+                          f"{test_data_dir} to obtain the missing files")
 @many_analytics
 @settings(max_examples=300)
 @given(I0=density_range, t=time_range_seconds, rateI=reac_rates)
@@ -183,6 +195,9 @@ def _uranium_den(U0, rateF, t) -> float:
 
 
 # noinspection PyPep8Naming
+@pytest.mark.skipif(data_missing, 
+                    reason="Missing decay data. Use the download script under "
+                          f"{test_data_dir} to obtain the missing files")
 @many_analytics
 @settings(max_examples=300)
 @given(I0=density_range, X0=density_range, t=time_range_seconds,
@@ -303,6 +318,9 @@ pow_reac_rates = st.tuples(reac_rates, pow_st) \
 
 # noinspection PyPep8Naming
 @pytest.mark.xfail(reason="Our current implementation isn't fully constant in power")
+@pytest.mark.skipif(data_missing, 
+                    reason="Missing decay data. Use the download script under "
+                          f"{test_data_dir} to obtain the missing files")
 @many_analytics
 @slow
 @seed(22821844992351348578153625617434270913)
