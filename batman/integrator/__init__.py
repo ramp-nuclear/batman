@@ -1,4 +1,3 @@
-"""Tools for stepping in time
+"""Tools for stepping in time"""
 
-"""
-from .predictor import predictor, energy_conserving_predictor
+from .predictor import predictor as predictor, energy_conserving_predictor as energy_conserving_predictor

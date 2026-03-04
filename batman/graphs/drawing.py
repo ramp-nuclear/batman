@@ -2,11 +2,11 @@
 sense.
 
 """
-from typing import Union, Dict, Hashable, Tuple
-
-import numpy as np
+from typing import Dict, Hashable, Tuple, Union
 
 import networkx as nx
+import numpy as np
+
 from .decay import DecayGraph
 from .reaction import ReactionGraph
 

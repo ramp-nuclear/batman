@@ -2,6 +2,7 @@
 
 """
 from typing import TypeVar
+
 import networkx as nx
 
 BatmanGraph = TypeVar('BatmanGraph', bound=nx.MultiDiGraph)

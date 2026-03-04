@@ -19,7 +19,7 @@ True
 """
 
 from batman.exponentiators.cram import *
-from batman.exponentiators.protocol import Exponentiator, FluxFunc
+from batman.exponentiators.protocol import Exponentiator as Exponentiator, FluxFunc as FluxFunc
 
 
 IPFCram16 = IPFCramSolver(*cram16_coefficients())

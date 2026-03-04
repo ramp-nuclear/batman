@@ -3,7 +3,7 @@
 Currently solely based on decay and reaction graphs.
 
 """
-from typing import Hashable, Iterable, FrozenSet
+from typing import FrozenSet, Hashable, Iterable
 
 import networkx as nx
 from isotopes import ZAID

@@ -3,21 +3,24 @@
 """
 from math import isclose
 
+import isotopes
 import networkx as nx
 import numpy as np
 import pytest
+from ramp_endf.decay import DecayProcess
+from ramp_endf.modes import ALPHA, BETA_M, SPF
+from reactions import Fission, NGamma, ProtoReaction, Reaction, ReactionRate
 
-import isotopes
 from batman.graphs.decay import DecayGraph
-from batman.graphs.filters import descendents_subgraph, \
-    predecessors_subgraph, subsets_connection_subgraph, blacklist_filter, \
-    whitelist_filter
+from batman.graphs.filters import (
+    blacklist_filter,
+    descendents_subgraph,
+    predecessors_subgraph,
+    subsets_connection_subgraph,
+    whitelist_filter,
+)
 from batman.graphs.matgen import graph_to_sparse_matrix
 from batman.graphs.reaction import ReactionGraph
-from ramp_endf.decay import DecayProcess
-from ramp_endf.modes import BETA_M, ALPHA, SPF
-from reactions import Reaction, NGamma, Fission, ProtoReaction
-from reactions import ReactionRate
 
 
 @pytest.fixture

@@ -1,12 +1,12 @@
 """module to calculate activities"""
 from typing import Dict
 
+from isotopes import ZAID
 from toolz import merge_with
 
 from batman.solver.inputs import EasyData
 from batman.solver.utils import RunData
 from batman.units import Bq
-from isotopes import ZAID
 
 
 def _get_single_activities(data: RunData) -> Dict[ZAID, Bq]:

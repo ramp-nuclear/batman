@@ -1,15 +1,15 @@
 """Decay matrix data.
 
 """
-from typing import Sequence, FrozenSet
+from typing import FrozenSet, Sequence
 
 import networkx as nx
 import numpy as np
-
 from isotopes import ZAID
-from batman.graphs.matgen import graph_to_sparse_matrix
+
 from batman.graphs import DecayGraph
-from batman.units import MWPerCM3, EV_TO_MJ, PerCmBarnArray
+from batman.graphs.matgen import graph_to_sparse_matrix
+from batman.units import EV_TO_MJ, MWPerCM3, PerCmBarnArray
 
 
 class DecayModel:

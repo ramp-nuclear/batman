@@ -3,11 +3,12 @@ held in nodes and edges, and in that fact that they cannot be auto-generated,
 and must be introduced externally, so their API should probably be nicer.
 
 """
-from typing import Hashable, NoReturn, Iterable
+from typing import Hashable, Iterable, NoReturn
 
 import networkx as nx
-from batman.units import CMBarnPerSecond
 from reactions import ReactionRate
+
+from batman.units import CMBarnPerSecond
 
 NGAMMA = r'(n,$\gamma$)'
 FISSION = '(n,f)'

@@ -6,9 +6,8 @@ import logging
 from abc import abstractmethod
 from copy import deepcopy
 from dataclasses import dataclass
-from functools import reduce, partial
-from typing import Tuple, Iterable, Generator, Sequence, TypeVar, Type, \
-    FrozenSet, Sized, Protocol, Callable
+from functools import partial, reduce
+from typing import Callable, FrozenSet, Generator, Iterable, Protocol, Sequence, Sized, Tuple, Type, TypeVar
 
 from coremaker.protocols.mixture import Mixture
 from isotopes import ZAID
@@ -16,8 +15,9 @@ from reactions import ReactionRate
 
 from batman.graphs import DecayGraph, GraphFilter
 from batman.models import ReactionModel, depletion_model
-from batman.units import MW, EV, MJ, Volume, EV_TO_MJ
-from .power_normalization import add_two, single_power_produced, calc_norm
+from batman.units import EV, EV_TO_MJ, MJ, MW, Volume
+
+from .power_normalization import add_two, calc_norm, single_power_produced
 from .utils import DepletionData, RunData, append_doc_of
 
 ModelData = Tuple[DecayGraph, Iterable[ReactionRate], GraphFilter,

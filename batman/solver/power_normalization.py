@@ -4,7 +4,8 @@
 from typing import Tuple
 
 from batman.units import MW
-from .utils import mixture_to_nd, RunData
+
+from .utils import RunData, mixture_to_nd
 
 
 def add_two(x: Tuple[MW, MW], y: Tuple[MW, MW]) -> Tuple[MW, MW]:

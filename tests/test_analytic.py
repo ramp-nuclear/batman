@@ -12,9 +12,9 @@ import hypothesis.strategies as st
 import numpy as np
 import pytest
 from coremaker.materials.mixture import Mixture
-from ramp_endf.decay import DecayProcess, parse_decay_processes
 from hypothesis import given, seed, settings
 from isotopes import I135, U235, Xe135
+from ramp_endf.decay import DecayProcess, parse_decay_processes
 from reactions import Fission, NGamma, ProtoReaction, Reaction, ReactionRate
 from scipy.constants import eV
 from scipy.integrate import solve_ivp
@@ -23,10 +23,11 @@ from batman.graphs import DecayGraph, GraphFilter
 from batman.graphs.decay import DECAY
 from batman.graphs.filters import whitelist_filter
 from batman.integrator import predictor
-from batman.solver import Configuration, InputData, SerialEasyData as EasyData, \
-    timestep_constant_power
+from batman.solver import Configuration, InputData, timestep_constant_power
+from batman.solver import SerialEasyData as EasyData
 from batman.solver.time_est import max_step_initial_correct_predictor as tguess
 from batman.units import CM3, EV_TO_MJ, MW, Second
+
 from .conftest import allclose, slow
 
 U235FISS_ENER = 200e6  # eV
