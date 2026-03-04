@@ -3,7 +3,7 @@ requires = ["setuptools", "setuptools-scm", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "batman"
+name = "ramp-batman"
 authors = [
     {name = "Nuclear RAMP team", email = "nuclear.ramp.dev@gmail.com"},
 ]
