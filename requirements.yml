@@ -6,4 +6,8 @@ dependencies:
   - toolz
   - more-itertools
   - multipledispatch
+  - ramp-isotopes
+  - ramp-endf
+  - ramp-coremaker
+  - ramp-reactions
   - dask

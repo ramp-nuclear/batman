@@ -31,6 +31,10 @@ dependencies = [
     "multipledispatch",
     "networkx",
     "numpy",
+    "ramp-coremaker",
+    "ramp-endf",
+    "ramp-isotopes",
+    "ramp-reactions",
     "scipy",
     "toolz"
 ]
