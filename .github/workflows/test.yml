@@ -44,6 +44,11 @@ jobs:
     - name: Doctest
       run: |
         pytest -v --doctest-modules batman
+    - name: Download data files
+      run: |
+        cd tests/test_data
+        ./download_test_files.sh
+        cd ../../
     - name: Test in test directory
       run: |
         cd tests
