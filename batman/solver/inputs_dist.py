@@ -12,8 +12,7 @@ programming over is quite nice. So we go through the trouble of making this Bag.
 """
 import logging
 from functools import partial
-from typing import Generator, Sequence, TypeVar, Iterable, Type, Tuple, \
-    FrozenSet, Dict, Callable, List, Any
+from typing import Any, Callable, Dict, FrozenSet, Generator, Iterable, List, Sequence, Tuple, Type, TypeVar
 
 import numpy as np
 from coremaker.protocols.mixture import Mixture
@@ -23,9 +22,9 @@ from reactions import ReactionRate, ReactionType
 from toolz import unique
 
 from batman.graphs import DecayGraph, GraphFilter
-from batman.models import DepletionModel, depletion_model, ReactionModel, \
-    fiss_arr_gen
-from .inputs import InputData, ComponentData, FiniteIterable, EasyData
+from batman.models import DepletionModel, ReactionModel, depletion_model, fiss_arr_gen
+
+from .inputs import ComponentData, EasyData, FiniteIterable, InputData
 from .utils import RunData, append_doc_of
 
 __all__ = ["DistEasyData"]

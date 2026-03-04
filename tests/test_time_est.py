@@ -12,10 +12,9 @@ from isotopes import I135, U235
 from reactions import Fission, Reaction, ReactionRate
 
 from batman import DecayGraph, GraphFilter, InputData, SerialEasyData
-from batman.solver.time_est import _allowed_predictor_step, deriv_p, \
-    max_step_initial_correct_predictor as maximal_step_at_power
+from batman.solver.time_est import _allowed_predictor_step, deriv_p
+from batman.solver.time_est import max_step_initial_correct_predictor as maximal_step_at_power
 from batman.units import EV_TO_MJ
-
 
 U235FISS_ENER = 200e6  # eV
 u0 = 1e-3

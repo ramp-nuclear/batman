@@ -4,15 +4,15 @@ graphs out of them.
 """
 from functools import wraps
 from pathlib import Path
-from typing import Any, Hashable, Tuple, FrozenSet, Union, Optional
+from typing import Any, FrozenSet, Hashable, Optional, Tuple, Union
 
 import networkx as nx
+from isotopes import ZAID
+from ramp_endf import Evaluation
+from ramp_endf.decay import Decay, DecayProcess, SPFData, parse_decay_processes
+from ramp_endf.util import halflife_to_rate
 
 from batman.units import Second
-from ramp_endf import Evaluation
-from ramp_endf.decay import DecayProcess, Decay, SPFData, parse_decay_processes
-from ramp_endf.util import halflife_to_rate
-from isotopes import ZAID
 
 DECAY = 'radioactive decay'
 

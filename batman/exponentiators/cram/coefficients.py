@@ -2,8 +2,8 @@
 
 """
 from typing import Tuple
-import numpy as np
 
+import numpy as np
 
 CRAMCoeffs = Tuple[np.ndarray, np.ndarray, float]
 

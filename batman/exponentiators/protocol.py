@@ -1,10 +1,10 @@
 """Exponentiator agreed upon protocol
 
 """
-from typing import Protocol, Callable
+from typing import Callable, Protocol
 
-from scipy.sparse import csr_matrix
 from numpy import ndarray
+from scipy.sparse import csr_matrix
 
 from batman.units import Second
 

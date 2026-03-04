@@ -4,15 +4,16 @@
 import logging
 from copy import deepcopy
 from math import inf
-from typing import Container, Optional, Tuple, Sequence, Callable
+from typing import Callable, Container, Optional, Sequence, Tuple
 
 import numpy as np
 from coremaker.protocols.mixture import Mixture
 
-from batman.units import Second, MW
+from batman.units import MW, Second
+
 from .inputs import EasyData
-from .k_est import deriv_k, calculate_loss_factor
-from .solve import Configuration, timestep_constant_power, BurnResult
+from .k_est import calculate_loss_factor, deriv_k
+from .solve import BurnResult, Configuration, timestep_constant_power
 
 modlogger = logging.getLogger('batman.solve.reach_k')
 

@@ -2,12 +2,12 @@
 
 """
 import logging
-from typing import Set, Hashable, Any, Callable
+from typing import Any, Callable, Hashable, Set
 
 import networkx as nx
+from ramp_endf.modes import SPF
 from toolz import identity
 
-from ramp_endf.modes import SPF
 from batman.graphs.types import BatmanGraph
 
 __all__ = ['GraphFilter', 'whitelist_filter',

@@ -1,10 +1,8 @@
-"""Reaction matrix tools
+"""Reaction matrix tools"""
 
-"""
 import operator
-from functools import reduce, lru_cache
-from typing import Sequence, Iterable, Dict, FrozenSet, \
-    Callable
+from functools import lru_cache, reduce
+from typing import Callable, Dict, FrozenSet, Iterable, Sequence
 
 import numpy as np
 import scipy.sparse as spr
@@ -12,7 +10,7 @@ from isotopes import ZAID
 from multipledispatch import dispatch
 from reactions import ReactionRate, ReactionType
 
-from batman.units import MWPerCM3, EV_TO_MJ, PerCmBarnArray
+from batman.units import EV_TO_MJ, MWPerCM3, PerCmBarnArray
 
 
 class FissionMat:
@@ -71,16 +69,14 @@ class FissionMat:
 
     @dispatch(float)
     def __mul__(self, other: float) -> "FissionMat":
-        return FissionMat(self.fission_vec, self.rate*other, self.index)
+        return FissionMat(self.fission_vec, self.rate * other, self.index)
 
     @dispatch(object)
-    def __mul__(self, other: object):
+    def __mul__(self, other: object):  # noqa: F811
         raise TypeError(f"Cannot multiply FissionMat by {type(other)}")
 
     def to_csr(self) -> spr.csr_matrix:
-        """Turn this matrix to csr format
-
-        """
+        """Turn this matrix to csr format"""
         n = len(self.fission_vec)
         m = spr.dok_matrix((n, n), dtype=self.fission_vec.dtype)
         m[self.index, :] = self.rate * self.fission_vec
@@ -97,8 +93,7 @@ def _arrgen(reaction: ReactionType, isos: Sequence[ZAID]) -> np.ndarray:
     return arr
 
 
-def fiss_arr_gen(isos: Sequence[ZAID], reactions: Sequence[ReactionType]) ->\
-        Dict[ReactionType, np.ndarray]:
+def fiss_arr_gen(isos: Sequence[ZAID], reactions: Sequence[ReactionType]) -> Dict[ReactionType, np.ndarray]:
     """Generate a branch vector for each branching reaction.
 
     Parameters
@@ -107,8 +102,7 @@ def fiss_arr_gen(isos: Sequence[ZAID], reactions: Sequence[ReactionType]) ->\
     reactions - Initializing reactions
 
     """
-    return {reac: _arrgen(reac, isos) for reac in reactions
-            if reac.branching}
+    return {reac: _arrgen(reac, isos) for reac in reactions if reac.branching}
 
 
 class ReactionModel:
@@ -121,11 +115,15 @@ class ReactionModel:
 
     """
 
-    def __init__(self, *, isos: Sequence[ZAID],
-                 reactions: Iterable[ReactionRate],
-                 dtype='float64',
-                 accumulate: FrozenSet[ZAID],
-                 branch_factory: Callable[..., np.ndarray] = _arrgen):
+    def __init__(
+        self,
+        *,
+        isos: Sequence[ZAID],
+        reactions: Iterable[ReactionRate],
+        dtype="float64",
+        accumulate: FrozenSet[ZAID],
+        branch_factory: Callable[..., np.ndarray] = _arrgen,
+    ):
         """
         Parameters
         ----------
@@ -146,22 +144,15 @@ class ReactionModel:
             try:
                 parent = isos.index(reac_rate.parent)
             except ValueError as e:
-                raise ValueError(f"{reac_rate.parent} from reaction "
-                                 f"{reac_rate.typus} not in "
-                                 f"isotope list: "
-                                 f"{isos}") from e
-            self.r[parent, parent] -= (reac_rate.mean
-                                       if reac_rate.parent not in accumulate
-                                       else 0.)
+                raise ValueError(
+                    f"{reac_rate.parent} from reaction {reac_rate.typus} not in isotope list: {isos}"
+                ) from e
+            self.r[parent, parent] -= reac_rate.mean if reac_rate.parent not in accumulate else 0.0
             self.prod_model[parent] += reac_rate.mean * reac_rate.nu
-            self.energy_model[parent] += (EV_TO_MJ * reac_rate.mean *
-                                          reac_rate.energy)
+            self.energy_model[parent] += EV_TO_MJ * reac_rate.mean * reac_rate.energy
             if reac_rate.branching:
                 fiss_vec = branch_factory(reac_rate.reaction, tuple(isos))
-                self.fiss.append(FissionMat(fiss_vec,
-                                            reac_rate.mean,
-                                            parent)
-                                 )
+                self.fiss.append(FissionMat(fiss_vec, reac_rate.mean, parent))
             else:
                 try:
                     target = isos.index(reac_rate.target)
@@ -172,18 +163,12 @@ class ReactionModel:
 
     @property
     def mat(self) -> spr.csr_matrix:
-        """Return the reaction matrix for this model.
-
-        """
+        """Return the reaction matrix for this model."""
         return self.r + self.fissions()
 
     def fissions(self) -> spr.csr_matrix:
-        """Return the fission yield matrix
-
-        """
-        return reduce(operator.add,
-                      map(FissionMat.to_csr, self.fiss),
-                      spr.csr_matrix(self.r.shape))
+        """Return the fission yield matrix"""
+        return reduce(operator.add, map(FissionMat.to_csr, self.fiss), spr.csr_matrix(self.r.shape))
 
     def energy(self, nd: PerCmBarnArray, norm: float) -> MWPerCM3:
         """Returns the energy emission given some material number densities.
@@ -208,9 +193,7 @@ class ReactionModel:
 
     @property
     def absorption_model(self) -> np.ndarray:
-        """Vector for the total annihilation rate for each parent isotope.
-
-        """
+        """Vector for the total annihilation rate for each parent isotope."""
         # TODO: correct this for reaction that create neutrons like n2n
 
         return -self.r.diagonal()

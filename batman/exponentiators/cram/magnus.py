@@ -21,8 +21,8 @@ import scipy.sparse as sp
 
 from batman.exponentiators.protocol import FluxFunc
 from batman.units import Second
-from .ipfcram import IPFCramSolver, _ipf_cram
 
+from .ipfcram import IPFCramSolver, _ipf_cram
 
 __all__ = ['CF3Magnus2IPFCRAM']
 

@@ -10,6 +10,7 @@ from warnings import warn
 import numpy as np
 
 from batman.units import MW, Second
+
 from .inputs import EasyData
 from .power_normalization import add_two
 from .utils import RunData, mixture_to_nd

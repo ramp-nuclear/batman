@@ -1,4 +1,0 @@
-git+ssh://git@gitlabsrv/kurim/ramp/isotopes.git@dev#egg=isotopes
-git+ssh://git@gitlabsrv/kurim/ramp/reactions.git@wip#egg=reactions
-git+ssh://git@gitlabsrv/kurim/ramp/endf.git@wip#egg=endf
-git+ssh://git@gitlabsrv/kurim/ramp/coremaker.git@wip#egg=coremaker

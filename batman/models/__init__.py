@@ -6,6 +6,6 @@ on.
 
 """
 
-from .reactionmodel import ReactionModel, fiss_arr_gen
-from .decaymodel import DecayModel
-from .depletionmodel import DepletionModel, depletion_model
+from .reactionmodel import ReactionModel as ReactionModel, fiss_arr_gen as fiss_arr_gen
+from .decaymodel import DecayModel as DecayModel
+from .depletionmodel import DepletionModel as DepletionModel, depletion_model as depletion_model

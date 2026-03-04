@@ -6,21 +6,21 @@ from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
 from math import isclose
-from typing import Callable, Tuple, Dict, Sequence, TypeVar, Optional
+from typing import Callable, Dict, Optional, Sequence, Tuple, TypeVar
 
 import numpy as np
 from coremaker.materials.mixture import Mixture
 from isotopes import ZAID
 from scipy.constants import day
 
-from batman.exponentiators import IPFCram48 as Cram, FluxFunc, \
-    Exponentiator
-from batman.units import MW, PerSecond, Second, PCM, PCMPerSecond
-from .inputs import EasyData
-from .k_est import estimate_k, deriv_k, calculate_loss_factor
-from .time_est import halfstep
-from .utils import mixture_to_nd, RunData, capture_warnings
+from batman.exponentiators import Exponentiator, FluxFunc
+from batman.exponentiators import IPFCram48 as Cram
+from batman.units import MW, PCM, PCMPerSecond, PerSecond, Second
 
+from .inputs import EasyData
+from .k_est import calculate_loss_factor, deriv_k, estimate_k
+from .time_est import halfstep
+from .utils import RunData, capture_warnings, mixture_to_nd
 
 DenArray = np.ndarray
 IsoData = Dict[ZAID, Tuple[MW, PerSecond]]

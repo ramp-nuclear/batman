@@ -2,17 +2,17 @@
 
 """
 from functools import lru_cache
-from typing import Tuple, FrozenSet, Sequence, Callable
+from typing import Callable, FrozenSet, Sequence, Tuple
 
 import networkx as nx
 from isotopes import ZAID
 from reactions import ReactionRate, ReactionType
 
-from batman.graphs.filters import GraphFilter
 from batman.graphs.decay import DecayGraph
+from batman.graphs.filters import GraphFilter
 from batman.graphs.reaction import ReactionGraph
-from .decaymodel import DecayModel
 
+from .decaymodel import DecayModel
 
 DepletionModel = Tuple[Sequence[ZAID],
                        DecayModel,
