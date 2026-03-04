@@ -29,7 +29,7 @@ jobs:
         pip install .
     - name: Run and import
       run: |
-        python3 -c "from Batman import InputData"
+        python3 -c "from batman import InputData"
 
   test:
     runs-on: ubuntu-latest
