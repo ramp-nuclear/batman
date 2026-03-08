@@ -20,3 +20,5 @@ needed to generate the numerical data from nuclear databases and user input.
 __ver__ = 0.1
 from .graphs import DecayGraph as DecayGraph, ReactionGraph as ReactionGraph, GraphFilter as GraphFilter
 from .solver import *
+
+jsonable = ["DecayGraph"]
