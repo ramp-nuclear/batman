@@ -1,6 +1,5 @@
-"""Graph filters that are used to generate leaner, meaner graphs.
+"""Graph filters that are used to generate leaner, meaner graphs."""
 
-"""
 import logging
 from typing import Any, Callable, Hashable, Set
 
@@ -10,12 +9,17 @@ from toolz import identity
 
 from batman.graphs.types import BatmanGraph
 
-__all__ = ['GraphFilter', 'whitelist_filter',
-           'subsets_connection_subgraph', 'blacklist_filter',
-           'exclude_spf_filter', 'descendents_subgraph',
-           'predecessors_subgraph']
+__all__ = [
+    "GraphFilter",
+    "whitelist_filter",
+    "subsets_connection_subgraph",
+    "blacklist_filter",
+    "exclude_spf_filter",
+    "descendents_subgraph",
+    "predecessors_subgraph",
+]
 
-modlogger = logging.getLogger('batman.filter')
+modlogger = logging.getLogger("batman.filter")
 
 
 class GraphFilter:
@@ -26,9 +30,7 @@ class GraphFilter:
 
     """
 
-    def __init__(self,
-                 func: Callable[[BatmanGraph, Any], BatmanGraph] = identity,
-                 *args, **kwargs):
+    def __init__(self, func: Callable[[BatmanGraph, Any], BatmanGraph] = identity, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
         self._filter = func
@@ -38,18 +40,15 @@ class GraphFilter:
 
     def __hash__(self):
         try:
-            return hash((self._filter,
-                         self.args,
-                         frozenset(self.kwargs.items())
-                         ))
+            fhash = hash(self._filter)
+            fhash = self._filter
         except TypeError:
-            return super().__hash__(self)
+            fhash = 0
+        return hash((fhash, self.args, frozenset(self.kwargs.items())))
 
-    def __eq__(self, other: 'GraphFilter'):
+    def __eq__(self, other: "GraphFilter"):
         try:
-            return (self._filter is other._filter
-                    and self.args == other.args
-                    and self.kwargs == other.kwargs)
+            return self._filter is other._filter and self.args == other.args and self.kwargs == other.kwargs
         except AttributeError:
             return super().__eq__(other)
 
@@ -103,9 +102,7 @@ def predecessors_subgraph(g: BatmanGraph, s: Set[Hashable]) -> BatmanGraph:
     return descendents_subgraph(g.reverse(False), s).reverse(False)
 
 
-def subsets_connection_subgraph(g: BatmanGraph,
-                                src: Set[Hashable],
-                                dest: Set[Hashable]) -> BatmanGraph:
+def subsets_connection_subgraph(g: BatmanGraph, src: Set[Hashable], dest: Set[Hashable]) -> BatmanGraph:
     """Returns the subgraph of nodes that can be reached from src and can reach
     dest.
 
@@ -125,8 +122,7 @@ def subsets_connection_subgraph(g: BatmanGraph,
     return predecessors_subgraph(descendents_subgraph(g, src), dest)
 
 
-def blacklist_filter(g: BatmanGraph, s: Set[Hashable]) -> \
-        BatmanGraph:
+def blacklist_filter(g: BatmanGraph, s: Set[Hashable]) -> BatmanGraph:
     """Return the subgraph that is the same but excludes the nodes in s
 
     Parameters
@@ -172,6 +168,4 @@ def exclude_spf_filter(g: BatmanGraph) -> BatmanGraph:
     Subgraph of g that has no SPF edges in it.
 
     """
-    return g.edge_subgraph((u, v, k)
-                           for u, v, k in g.edges(default=(), keys=True)
-                           if SPF not in k)
+    return g.edge_subgraph((u, v, k) for u, v, k in g.edges(default=(), keys=True) if SPF not in k)
