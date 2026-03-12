@@ -9,8 +9,7 @@ from reactions.reaction_rate import ReactionRate
 
 from batman.graphs.decay import DecayGraph
 from batman.graphs.filters import GraphFilter
-from batman.integrator.predictor import energy_conserving_predictor, predictor
-from batman.solver import Configuration, InputData, timestep_constant_power
+from batman.solver import Configuration, InputData, timestep_const_flux_initial_power, timestep_constant_power
 from batman.solver import SerialEasyData as EasyData
 from batman.solver.time_est import max_step_initial_correct_predictor as tguess
 
@@ -38,9 +37,15 @@ def simple_data():
 
 @given(p=powers)
 def test_predictor_with_power_is_undershooting_power(p, simple_data):
-    config = Configuration(p_rtol=1, p_atol=1, integrator=predictor, time_guesser=tguess, threshold=1e-18)
+    config = Configuration(p_rtol=1, p_atol=1, time_guesser=tguess, threshold=1e-18)
     norm = simple_data.normalize(p, decay_power_allowed=False)
-    newden, result = timestep_constant_power(simple_data, p, t, config=config)
+    newden, result = timestep_constant_power(
+        simple_data,
+        p,
+        t,
+        step_strategy=timestep_const_flux_initial_power,
+        config=config,
+    )
     res_mix = newden[0]
     expected_u = _uranium_den(u0, norm * reaction.mean, t)
     assert res_mix[U235] > (1 - 1e-10) * expected_u
@@ -52,11 +57,16 @@ def test_energy_preserving_predictor_is_getting_power_right(p, simple_data):
     config = Configuration(
         p_rtol=1,
         p_atol=1,
-        integrator=energy_conserving_predictor,
         time_guesser=tguess,
         threshold=1e-18,
     )
-    newden, result = timestep_constant_power(simple_data, p, t, config=config)
+    newden, result = timestep_constant_power(
+        simple_data,
+        p,
+        t,
+        step_strategy=timestep_const_flux_initial_power,
+        config=config,
+    )
     res_mix = newden[0]
     expected_u = _uranium_den(u0, norm * reaction.mean, t)
     assert res_mix[U235] == pytest.approx(expected_u, rel=1e-8, abs=1e-10)

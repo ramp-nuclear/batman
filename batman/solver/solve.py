@@ -4,8 +4,9 @@ import logging
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
-from math import isclose
-from typing import Callable, Optional, Sequence, TypeVar
+from functools import partial
+from math import exp, isclose
+from typing import Callable, Optional, Protocol, Sequence, TypeVar
 
 import numpy as np
 from coremaker.materials.mixture import Mixture
@@ -14,6 +15,7 @@ from scipy.constants import day
 
 from batman.exponentiators import Exponentiator, FluxFunc
 from batman.exponentiators import IPFCram48 as Cram
+from batman.solver.time_est import deriv_p
 from batman.units import MW, PCM, PCMPerSecond, PerSecond, Second
 
 from .inputs import EasyData
@@ -25,7 +27,17 @@ DenArray = np.ndarray
 IsoData = dict[ZAID, tuple[MW, PerSecond]]
 PowerGuess = Callable[[Second, MW, MW, MW], Second]
 
-__all__ = ["timestep_constant_power", "timestep_constant_flux", "Configuration", "depstep_single", "BurnResult"]
+__all__ = [
+    "timestep_constant_power",
+    "timestep_constant_flux",
+    "timestep_const_flux_initial_power",
+    "timestep_const_power_linear_flux",
+    "timestep_constant_flux_energy_conserve",
+    "Configuration",
+    "StepStrategy",
+    "depstep_single",
+    "BurnResult",
+]
 
 modlogger = logging.getLogger("batman.solve")
 
@@ -67,8 +79,6 @@ class Configuration:
     decay_power_allowed - A flag for whether non-0 power is allowed when the
                           user's desired power is 0. This only matters if the
                           decay heat is modeled in the decay processes.
-    integrator - Integrator used to step the time forward. I.e predictor,
-                 predictor/corrector and the like.
     expo - Tool used to calculate the exponential matrix application on a vector
     time_guesser - Tool for guessing how large a time step one can take without
                    violating the tolerances. It's a function that returns a time
@@ -88,7 +98,6 @@ class Configuration:
         p_rtol: float,
         p_atol: MW,
         decay_power_allowed: bool = True,
-        integrator: Callable,
         expo: Exponentiator = Cram,
         time_guesser: Callable,
         threshold: float,
@@ -99,13 +108,12 @@ class Configuration:
         self.decay_power_allowed = decay_power_allowed
         self.expo = expo
         self.threshold = threshold
-        self.integrator = integrator
         self.time_guesser = time_guesser
         self.guess_correction = guess_correction
 
     def depstepper(self, data: EasyData, t: Second, norm: FluxFunc) -> Sequence[Mixture]:
         """Do a single burnup step at a given flux level."""
-        return self.integrator(data, t, norm, stepper=depstep_single, expo=self.expo, threshold=self.threshold)
+        return tuple(data.map(partial(depstep_single, norm=norm, t=t, expo=self.expo, threshold=self.threshold)))
 
     def first_guess(self, data: EasyData, t: Second, p: MW, norm: Optional[float] = None) -> Second:
         """Make an initial guess for the timestep to take given the data at
@@ -123,6 +131,12 @@ class Configuration:
             return self.time_guesser(data, t, p, atol=self.p_atol, rtol=self.p_rtol, norm=norm)
 
 
+class StepStrategy(Protocol):
+    """Protocol for functions that try to get the mixtures after a step"""
+
+    def __call__(data: EasyData, p: MW, t: Second, *, config: Configuration) -> Sequence[Mixture]: ...
+
+
 def timestep_constant_flux(data: EasyData, norm: float, t: Second, *, config: Configuration) -> Sequence[Mixture]:
     """Do a burnup step, such that the flux is constant within the timestep.
 
@@ -134,7 +148,52 @@ def timestep_constant_flux(data: EasyData, norm: float, t: Second, *, config: Co
     config - Configuration object for how to run this.
 
     """
-    return config.depstepper(data, t, norm=lambda x: norm)
+    return config.depstepper(data, t, norm=lambda _: norm)
+
+
+def timestep_const_flux_initial_power(data: EasyData, p: MW, t: Second, *, config: Configuration) -> Sequence[Mixture]:
+    """Do a burnup step, such that the flux is constant within the timestep, and the normalization conserves
+    the initial power.
+
+    """
+    norm = data.normalize(p, decay_power_allowed=config.decay_power_allowed)
+    return timestep_constant_flux(data=data, norm=norm, t=t, config=config)
+
+
+def timestep_const_power_linear_flux(data: EasyData, p: MW, t: Second, *, config: Configuration) -> Sequence[Mixture]:
+    """Makes a burnup step, assuming the power should remain constant and that this can happen with the
+    flux being an inverse of a linear function.
+
+    """
+    decp, reacp = data.powers()
+    n0 = data.calc_norm(p=p, decp=decp, reacp=reacp, decay_power_allowed=config.decay_power_allowed)
+    dpdt = deriv_p(data, norm=n0)
+    a = 1.0 / n0
+    b = a * dpdt / reacp
+
+    def _flux(t: Second) -> float:
+        return 1.0 / (a + b * t)
+
+    return config.depstepper(data, t, norm=_flux)
+
+
+def timestep_constant_flux_energy_conserve(
+    data: EasyData, p: MW, t: Second, *, config: Configuration
+) -> Sequence[Mixture]:
+    """Makes a burnup step, assuming the flux normalization should be constant,
+    but the normalization doesn't conserve the power but the energy in the step,
+    assuming an exponential shape.
+
+    """
+    try:
+        n0 = data.normalize(p=p, decay_power_allowed=config.decay_power_allowed)
+        assert n0 > 0.0
+        dpdt0 = deriv_p(data, norm=n0)
+        a = -dpdt0 / p
+        fac = a * t / (1.0 - exp(-a * t))
+    except (AssertionError, ZeroDivisionError):
+        fac = 1.0
+    return config.depstepper(data, t, norm=lambda _: fac * n0)
 
 
 @dataclass(frozen=True)
@@ -192,24 +251,26 @@ def _step_constant_power(
     p: MW,
     tstep: Second,
     *,
+    step_strategy: StepStrategy,
     config: Configuration,
     loss_fac: Optional[float],
 ) -> tuple[Sequence[Mixture], BurnResult]:
-    """Do one burnup step, such that the total power is constant within the
-    timestep.
+    """Do one burnup step, such that the total power at end of step is within
+    allowed range.
 
     Parameters
     ----------
     data - Burnup data to use. See EasyData for details
     p - Power to operate at in MW.
     tstep - Time to burn, in seconds.
+    step_strategy - Function for how to perform a step.
     config - Configuration object for how to run this algorithm.
     loss_fac - Unmodeled losses to production ratio. Used for k-info
     """
 
     norm = data.normalize(p, decay_power_allowed=config.decay_power_allowed)
     cpy = deepcopy(data)
-    cpy.mixtures = config.depstepper(data, tstep, norm=lambda x: norm)
+    cpy.mixtures = step_strategy(data, p, tstep, config=config)
     decp, reacp = cpy.powers(norm)
     kest = loss_fac and estimate_k(cpy, loss_factor=loss_fac)
     dkdt = loss_fac and deriv_k(cpy, loss_factor=loss_fac, p=p, _norm=norm)
@@ -221,7 +282,14 @@ def _step_constant_power(
         modlogger.info(f"Time step failed. Was {tstep / day:.3f} days. Power was {decp + reacp:.8e} instead of {p:.8e}")
         small_step = config.guess_correction(t=tstep, p=p, decp=decp, reacp=reacp)
         modlogger.info(f"Trying a smaller step of {small_step / day:.3f} days.")
-        mixtures, result = _step_constant_power(data, p=p, tstep=small_step, config=config, loss_fac=loss_fac)
+        mixtures, result = _step_constant_power(
+            data,
+            p=p,
+            tstep=small_step,
+            step_strategy=step_strategy,
+            config=config,
+            loss_fac=loss_fac,
+        )
         return (mixtures, BurnResult(1, timedelta(0.0), norm, k=kest, dkdt=dkdt) + result)
 
 
@@ -230,6 +298,7 @@ def timestep_constant_power(
     p: MW,
     t: Second,
     *,
+    step_strategy: StepStrategy = timestep_const_flux_initial_power,
     config: Configuration,
     loss_fac: Optional[float] = None,
     k0: Optional[float] = None,
@@ -242,6 +311,7 @@ def timestep_constant_power(
     data - Burnup data to use. See EasyData for details
     p - Power to operate at in MW.
     t - Time to burn, in seconds.
+    step_strategy - Function for how to perform a step.
     config - Configuration object for how to run this algorithm.
     loss_fac - Ratio of unmodeled losses to production. Used for k-info.
     k0 - Initial k before the step begins. This can be used for k-info if
@@ -253,16 +323,21 @@ def timestep_constant_power(
 
     """
 
-    onestep = config.first_guess(data=data, t=t, p=p)
+    t0 = t
     loss_fac = loss_fac or (k0 and calculate_loss_factor(data, k0))
-    modlogger.info(f"Trying a step of {onestep / day:.1f} Days out of {t / day:.1f}")
-    next_data = deepcopy(data)
-    next_data.mixtures, initial_result = _step_constant_power(
-        data, p=p, tstep=onestep, config=config, loss_fac=loss_fac
-    )
-    tstep = initial_result.time.total_seconds()
-    if isclose(tstep, t, rel_tol=1e-4, abs_tol=1e-10):
-        return next_data.mixtures, initial_result
-    else:
-        mixtures, result = timestep_constant_power(next_data, p=p, t=t - tstep, config=config, loss_fac=loss_fac)
-        return mixtures, initial_result + result
+    result = None
+    while not isclose(t, 0, abs_tol=max((1e-10, 1e-4 * t0))):
+        onestep = config.first_guess(data=data, t=t, p=p)
+        modlogger.info(f"Trying a step of {onestep / day:.1f} Days out of {t / day:.1f}")
+        next_data = deepcopy(data)
+        next_data.mixtures, next_result = _step_constant_power(
+            data,
+            p=p,
+            tstep=onestep,
+            config=config,
+            loss_fac=loss_fac,
+            step_strategy=step_strategy,
+        )
+        t -= next_result.time.total_seconds()
+        result = result + next_result if result is not None else next_result
+    return next_data.mixtures, result
