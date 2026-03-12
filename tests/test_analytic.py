@@ -22,7 +22,6 @@ from scipy.integrate import solve_ivp
 from batman.graphs import DecayGraph, GraphFilter
 from batman.graphs.decay import DECAY
 from batman.graphs.filters import whitelist_filter
-from batman.integrator import predictor
 from batman.solver import Configuration, InputData, timestep_constant_power
 from batman.solver import SerialEasyData as EasyData
 from batman.solver.time_est import max_step_initial_correct_predictor as tguess
@@ -75,7 +74,7 @@ def test_analytic_decay_is_exponential_down(iodine_decay: DecayGraph, t: Second)
     expected_res = Mixture({I135: exp(rate * t)}, 20.0)
     data = InputData([iodine_decay], [[]], [_filter], [mixture], [1.0])
     easy = EasyData.from_input(data)
-    config = Configuration(p_rtol=1.0, p_atol=0, integrator=predictor, time_guesser=tguess, threshold=1e-18)
+    config = Configuration(p_rtol=1.0, p_atol=0, time_guesser=tguess, threshold=1e-18)
     newden, result = timestep_constant_power(easy, 0.0, t, config=config)
     assert allclose(newden[0], expected_res)
 
@@ -99,7 +98,7 @@ def test_analytic_power_constant_burn_causes_linear_drop_in_fuel(
     easy = EasyData.from_input(data)
     isos, _, r = easy.models[0]
     assert r.energy_model[isos.index(U235)] > 0.0, r.energy_model
-    config = Configuration(p_rtol=acc, p_atol=P * acc, integrator=predictor, time_guesser=tguess, threshold=1e-18)
+    config = Configuration(p_rtol=acc, p_atol=P * acc, time_guesser=tguess, threshold=1e-18)
     if max_step == 1:
         assert config.first_guess(easy, t=t, p=P) == t
     (newden,), result = timestep_constant_power(easy, P, t, config=config)
@@ -156,7 +155,7 @@ def test_follows_analytic_solution_for_U235_iodine_system(iodine_decay, I0, t, r
     data = InputData([iodine_decay], [reactions], [_filter], [mixture], [1.0], accumulates=[frozenset({U235})])
     easy: EasyData = EasyData.from_input(data)
     easy.calc_norm = lambda *a, **ka: 1.0
-    config = Configuration(p_rtol=1.0, p_atol=0.0, integrator=predictor, time_guesser=tguess, threshold=1e-18)
+    config = Configuration(p_rtol=1.0, p_atol=0.0, time_guesser=tguess, threshold=1e-18)
     newden, result = timestep_constant_power(easy, 0, t, config=config)
     assert allclose(newden[0], expected_res)
     assert result.steps <= 2
@@ -197,7 +196,7 @@ def test_follows_analytic_solution_for_constant_U235_iodine_xenon_system(iodine_
     data = InputData([iodine_decay], [reactions], [_filter], [mixture], [1.0], accumulates=[frozenset({U235})])
     easy = EasyData.from_input(data)
     easy.calc_norm = lambda *a, **ka: 1.0
-    config = Configuration(p_rtol=1.0, p_atol=0.0, integrator=predictor, time_guesser=tguess, threshold=1e-18)
+    config = Configuration(p_rtol=1.0, p_atol=0.0, time_guesser=tguess, threshold=1e-18)
     newden, result = timestep_constant_power(easy, 0.0, t, config=config)
     res_mix = newden[0]
     approx = partial(pytest.approx, rel=1e-5, abs=1e-14)
@@ -330,7 +329,7 @@ def test_follows_analytic_solution_for_U235_iodine_xenon_system(
     expected_res_u = _uranium_den(U0, rateF, t)
     data = InputData([iodine_decay], [reactions], [_filter], [mixture], [vol])
     easy = EasyData.from_input(data)
-    config = Configuration(p_rtol=1e-2, p_atol=1e-10, integrator=predictor, time_guesser=tguess, threshold=1e-18)
+    config = Configuration(p_rtol=1e-2, p_atol=1e-10, time_guesser=tguess, threshold=1e-18)
     newden, result = timestep_constant_power(
         easy,
         p,
