@@ -165,14 +165,15 @@ def timestep_const_power_linear_flux(data: EasyData, p: MW, t: Second, *, config
     flux being an inverse of a linear function.
 
     """
-    decp, reacp = data.powers()
-    n0 = data.calc_norm(p=p, decp=decp, reacp=reacp, decay_power_allowed=config.decay_power_allowed)
+    decp, _ = data.powers(norm=1.0)
+    reacp = p - decp
+    n0 = data.calc_norm(p=p, decp=decp, reacp=p - decp, decay_power_allowed=config.decay_power_allowed)
     dpdt = deriv_p(data, norm=n0)
     a = 1.0 / n0
-    b = a * dpdt / reacp
+    b = -a * dpdt / reacp
 
-    def _flux(t: Second) -> float:
-        return 1.0 / (a + b * t)
+    def _flux(tt: Second) -> float:
+        return 1.0 / (a + b * tt)
 
     return config.depstepper(data, t, norm=_flux)
 

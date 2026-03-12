@@ -10,11 +10,7 @@ from scipy.sparse import csr_matrix
 
 from batman.exponentiators import CF3Magnus2IPFCRAM as Magnus
 from batman.exponentiators import Exponentiator, IPFCramSolver
-
-# noinspection PyPep8Naming
 from batman.exponentiators import cram16_coefficients as CRAM16
-
-# noinspection PyPep8Naming
 from batman.exponentiators import cram48_coefficients as CRAM48
 
 
