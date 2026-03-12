@@ -3,6 +3,7 @@
 Currently solely based on decay and reaction graphs.
 
 """
+
 from typing import FrozenSet, Hashable, Iterable
 
 import networkx as nx
@@ -10,11 +11,9 @@ from isotopes import ZAID
 from scipy.sparse import csr_matrix, dok_matrix
 
 
-def graph_to_sparse_matrix(g: nx.MultiDiGraph,
-                           order: Iterable[Hashable] = None,
-                           dtype: str = None,
-                           accumulate: FrozenSet[ZAID] = frozenset()) -> \
-        csr_matrix:
+def graph_to_sparse_matrix(
+    g: nx.MultiDiGraph, order: Iterable[Hashable] = None, dtype: str = None, accumulate: FrozenSet[ZAID] = frozenset()
+) -> csr_matrix:
     """Generate a sparse matrix from the decay and reaction graph.
     Assumes the graph has all the per-second constants normalized to the
     current power etc, in the correct units.
@@ -42,18 +41,18 @@ def graph_to_sparse_matrix(g: nx.MultiDiGraph,
     order = tuple(order) if order else tuple(g.nodes)
     if g.number_of_nodes() and g.number_of_edges():  # networkx fails otherwise
         g_reversed = g.reverse(copy=True)
-        g_reversed.add_nodes_from(order-g_reversed.nodes)
-        m = dok_matrix(nx.convert_matrix.to_scipy_sparse_array(g_reversed,
-                                                     nodelist=order,
-                                                     dtype=dtype,
-                                                     weight='rate',
-                                                     format='dok'))
+        g_reversed.add_nodes_from(order - g_reversed.nodes)
+        m = dok_matrix(
+            nx.convert_matrix.to_scipy_sparse_array(
+                g_reversed, nodelist=order, dtype=dtype, weight="rate", format="dok"
+            )
+        )
     else:
         n = len(order)
         m = dok_matrix((n, n))
     if accumulate:
         for iso in accumulate:
             index = order.index(iso)
-            m[index, index] = 0.
+            m[index, index] = 0.0
     m = m.tocsr(copy=False)
     return m

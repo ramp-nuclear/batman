@@ -1,6 +1,5 @@
-"""Tools for the calculation of power and renormalization
+"""Tools for the calculation of power and renormalization"""
 
-"""
 from typing import Tuple
 
 from batman.units import MW
@@ -35,8 +34,7 @@ def single_power_produced(compdata: RunData, norm: float) -> Tuple[MW, MW]:
     return decmodel.energy(nd) * volume, reacmodel.energy(nd, norm=norm) * volume
 
 
-def calc_norm(p: MW, decp: MW, reacp: MW, *,
-              decay_power_allowed: bool) -> float:
+def calc_norm(p: MW, decp: MW, reacp: MW, *, decay_power_allowed: bool) -> float:
     """Calculate the normalization for the reaction part given the current
     breakdown and desired power.
 
@@ -63,11 +61,9 @@ def calc_norm(p: MW, decp: MW, reacp: MW, *,
 
     """
     if p and not reacp and not decay_power_allowed:
-        raise ZeroDivisionError(f"Cannot reach desired power {p} since "
-                                f"pre-normalized reaction power was {reacp}")
+        raise ZeroDivisionError(f"Cannot reach desired power {p} since pre-normalized reaction power was {reacp}")
     elif p and decp > p:
-        raise ValueError(f"Decay power ({decp}) greater than non-zero-desired "
-                         f"power: {p}")
+        raise ValueError(f"Decay power ({decp}) greater than non-zero-desired power: {p}")
     else:
-        pleft = (p - decp) if p else 0.
-        return pleft / reacp if reacp else 0.
+        pleft = (p - decp) if p else 0.0
+        return pleft / reacp if reacp else 0.0

@@ -1,6 +1,5 @@
-"""Tools to estimate the length of a timestep.
+"""Tools to estimate the length of a timestep."""
 
-"""
 from functools import partial
 from logging import getLogger
 from math import inf, isclose, log
@@ -15,10 +14,10 @@ from .inputs import EasyData
 from .power_normalization import add_two
 from .utils import RunData, mixture_to_nd
 
-__all__ = ['deriv_p', 'max_step_initial_correct_predictor', 'halfstep']
+__all__ = ["deriv_p", "max_step_initial_correct_predictor", "halfstep"]
 
 
-logger = getLogger('batman.time_est')
+logger = getLogger("batman.time_est")
 
 
 def _deriv_p_single(data: RunData, *, norm: float) -> Tuple[float, float]:
@@ -60,32 +59,30 @@ def deriv_p(data: EasyData, *, norm: float) -> float:
 
     """
 
-    return sum(data.map_reduce(partial(_deriv_p_single, norm=norm),
-                               add_two,
-                               initial=(0., 0.)
-                               )
-               )
+    return sum(data.map_reduce(partial(_deriv_p_single, norm=norm), add_two, initial=(0.0, 0.0)))
 
 
-def _allowed_predictor_step(p0: MW, dpdt: float, *,
-                            rtol: float, atol: MW,
-                            nudge: float):
-    if isclose(dpdt, 0.):
+def _allowed_predictor_step(p0: MW, dpdt: float, *, rtol: float, atol: MW, nudge: float):
+    if isclose(dpdt, 0.0):
         return inf
-    if rtol > 1. or atol > p0:
+    if rtol > 1.0 or atol > p0:
         return inf
     rate = dpdt / p0
     tol = (atol * nudge / p0, rtol * nudge)
-    return max(log(1.+np.sign(rate)*a) / rate for a in tol)
+    return max(log(1.0 + np.sign(rate) * a) / rate for a in tol)
 
 
 def max_step_initial_correct_predictor(
-        data: EasyData, t: Second, p0: MW, *,
-        atol: MW,
-        rtol: float,
-        too_small: Second = 0.,
-        nudge: float = 1.-1e-2,
-        norm: Optional[float] = None) -> Second:
+    data: EasyData,
+    t: Second,
+    p0: MW,
+    *,
+    atol: MW,
+    rtol: float,
+    too_small: Second = 0.0,
+    nudge: float = 1.0 - 1e-2,
+    norm: Optional[float] = None,
+) -> Second:
     """Yields an initial guess using the power derivative.
     This method assumes that the power starts at the correct power level that
     the user desires, and then the flux remains constant. For a non-breeding
@@ -131,17 +128,16 @@ def max_step_initial_correct_predictor(
     A time step estimate that would be within at least one of the tolerances.
 
     """
-    norm = (norm if norm is not None
-            else data.normalize(p0, decay_power_allowed=True))
+    norm = norm if norm is not None else data.normalize(p0, decay_power_allowed=True)
     dpdt = deriv_p(data, norm=norm)
-    power_allowed_step = _allowed_predictor_step(p0, dpdt,
-                                                 rtol=rtol, atol=atol,
-                                                 nudge=nudge)
-    res = t if t < power_allowed_step else min(power_allowed_step, t/2)
+    power_allowed_step = _allowed_predictor_step(p0, dpdt, rtol=rtol, atol=atol, nudge=nudge)
+    res = t if t < power_allowed_step else min(power_allowed_step, t / 2)
     if res < too_small:
-        warn("Time step is considered too small for accurate dk/dt"
-             "information due to Xe135 rapid change: "
-             f"{res:.3e} < {too_small:.3e} seconds")
+        warn(
+            "Time step is considered too small for accurate dk/dt"
+            "information due to Xe135 rapid change: "
+            f"{res:.3e} < {too_small:.3e} seconds"
+        )
     return res
 
 

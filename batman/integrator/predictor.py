@@ -1,6 +1,5 @@
-"""Simple forward predictor.
+"""Simple forward predictor."""
 
-"""
 from functools import partial
 from math import exp
 from typing import Sequence
@@ -13,9 +12,9 @@ from batman.solver.time_est import deriv_p
 from batman.units import Second
 
 
-def predictor(data: EasyData, t: Second, norm: float, *,
-              stepper, expo: Exponentiator,
-              threshold: float) -> Sequence[Mixture]:
+def predictor(
+    data: EasyData, t: Second, norm: float, *, stepper, expo: Exponentiator, threshold: float
+) -> Sequence[Mixture]:
     """Predictor that assumes the flux is at the level normalized at the start.
 
     Parameters
@@ -32,14 +31,12 @@ def predictor(data: EasyData, t: Second, norm: float, *,
     A sequence of post-step mixtures.
 
     """
-    return tuple(data.map(partial(stepper, norm=norm, t=t, expo=expo,
-                                  threshold=threshold)))
+    return tuple(data.map(partial(stepper, norm=norm, t=t, expo=expo, threshold=threshold)))
 
 
 def energy_conserving_predictor(
-        data: EasyData, t: Second, norm: float, *,
-        stepper, expo: Exponentiator,
-        threshold: float) -> Sequence[Mixture]:
+    data: EasyData, t: Second, norm: float, *, stepper, expo: Exponentiator, threshold: float
+) -> Sequence[Mixture]:
     r"""Predictor that tries to conserve the energy emitted within the time step
     even though the power could decay as fuel is burnt if the flux is kept constant.
     This requires the predictor to lie about the initial flux level, and for the power
@@ -55,7 +52,7 @@ def energy_conserving_predictor(
         \int_{0}^{t}{A*p(t)dt} = p0*t
 
     .. math::
-        A = p0*t / ((p0/a)*(1-exp(a*t)))  \implies  A = a*t / (1-exp(a*t))
+        A = p0*t / ((p0/a)*(1-exp(-a*t)))  \implies  A = a*t / (1-exp(a*t))
 
     So we can call the regular predictor with norm=A*norm, once we have A.
 
@@ -75,13 +72,11 @@ def energy_conserving_predictor(
     """
 
     try:
-        assert norm > 0.
+        assert norm > 0.0
         dpdt = deriv_p(data, norm=norm)
         p0 = data.power(norm=norm)
         a = -dpdt / p0
-        fac = a*t / (1.-exp(-a*t))
+        fac = a * t / (1.0 - exp(-a * t))
     except (AssertionError, ZeroDivisionError):
-        fac = 1.
-    return predictor(data, t, norm=fac*norm,
-                     stepper=stepper, expo=expo,
-                     threshold=threshold)
+        fac = 1.0
+    return predictor(data, t, norm=fac * norm, stepper=stepper, expo=expo, threshold=threshold)

@@ -1,6 +1,5 @@
-"""Common tools for the batman expo
+"""Common tools for the batman expo"""
 
-"""
 from contextlib import contextmanager
 from logging import captureWarnings
 from typing import Sequence, Tuple
@@ -13,8 +12,7 @@ from batman.models import DecayModel, ReactionModel
 from batman.units import Volume
 
 
-def mixture_to_nd(mixture: Mixture, isos: Sequence[ZAID], *,
-                  dtype: str) -> np.ndarray:
+def mixture_to_nd(mixture: Mixture, isos: Sequence[ZAID], *, dtype: str) -> np.ndarray:
     """Get a numpy array for number densities given a mixture and isotopes to
     use
 
@@ -25,9 +23,7 @@ def mixture_to_nd(mixture: Mixture, isos: Sequence[ZAID], *,
     dtype - Numpy datatype string definition
 
     """
-    return np.fromiter((mixture.isotopes.get(iso, 0.) for iso in isos),
-                       dtype=dtype,
-                       count=len(isos))
+    return np.fromiter((mixture.isotopes.get(iso, 0.0) for iso in isos), dtype=dtype, count=len(isos))
 
 
 DepletionData = Tuple[Sequence[ZAID], DecayModel, ReactionModel]
@@ -42,9 +38,11 @@ def append_doc_of(f):
     f - function to add documentation to.
 
     """
+
     def _deco(fun):
         fun.__doc__ += f.__doc__
         return fun
+
     return _deco
 
 
