@@ -1,3 +1,1 @@
-"""Testing. Testing.
-
-"""
+"""Testing. Testing."""

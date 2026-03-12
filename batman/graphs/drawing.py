@@ -2,6 +2,7 @@
 sense.
 
 """
+
 from typing import Dict, Hashable, Tuple, Union
 
 import networkx as nx
@@ -11,11 +12,21 @@ from .decay import DecayGraph
 from .reaction import ReactionGraph
 
 
-def draw_multigraph_edge_labels(g: nx.MultiGraph, pos, edge_labels=None,
-                                label_pos=0.5, font_size=10, font_color='k',
-                                font_family='sans-serif', font_weight='normal',
-                                alpha=1.0, bbox=None, ax=None, rotate=True,
-                                **kwds):
+def draw_multigraph_edge_labels(
+    g: nx.MultiGraph,
+    pos,
+    edge_labels=None,
+    label_pos=0.5,
+    font_size=10,
+    font_color="k",
+    font_family="sans-serif",
+    font_weight="normal",
+    alpha=1.0,
+    bbox=None,
+    ax=None,
+    rotate=True,
+    **kwds,
+):
     """Draw edge labels for a MultiGraph.
     The way this works is that labels are written for each key under the
     arrow, because I don't feel like drawing multiple arrows.
@@ -88,7 +99,7 @@ def draw_multigraph_edge_labels(g: nx.MultiGraph, pos, edge_labels=None,
         print("Matplotlib unable to open display")
         raise
 
-    rc('text', usetex=True)
+    rc("text", usetex=True)
 
     if ax is None:
         ax = plt.gca()
@@ -101,8 +112,7 @@ def draw_multigraph_edge_labels(g: nx.MultiGraph, pos, edge_labels=None,
     for (n1, n2, k), label in labels.items():
         (x1, y1) = pos[n1]
         (x2, y2) = pos[n2]
-        x, y = (x1 * label_pos + x2 * (1.0 - label_pos),
-                y1 * label_pos + y2 * (1.0 - label_pos))
+        x, y = (x1 * label_pos + x2 * (1.0 - label_pos), y1 * label_pos + y2 * (1.0 - label_pos))
 
         if rotate:
             # in degrees
@@ -110,44 +120,61 @@ def draw_multigraph_edge_labels(g: nx.MultiGraph, pos, edge_labels=None,
             # make label orientation "right-side-up"
             if angle > 90:
                 angle -= 180
-            if angle < - 90:
+            if angle < -90:
                 angle += 180
             # transform data coordinate angle to screen coordinate angle
             xy = np.array((x, y))
-            trans_angle = ax.transData.transform_angles(np.array((angle,)),
-                                                        xy.reshape((1, 2)))[0]
+            trans_angle = ax.transData.transform_angles(np.array((angle,)), xy.reshape((1, 2)))[0]
         else:
             trans_angle = 0.0
 
         cnt = used.setdefault((n1, n2), 0)
-        trans_mat = np.array([(np.cos(trans_angle), -np.sin(trans_angle)),
-                              (np.sin(trans_angle), np.cos(trans_angle))])
+        trans_mat = np.array([(np.cos(trans_angle), -np.sin(trans_angle)), (np.sin(trans_angle), np.cos(trans_angle))])
         offset = np.array((0, 0.1 * cnt + (0.1 if n1 == n2 else 0))).T
         x, y = np.array((x, y)).T - trans_mat @ offset
         used[(n1, n2)] = cnt + 1
         # use default box of white with white border
         if bbox is None:
-            bbox = dict(boxstyle='round', ec=(1.0, 1.0, 1.0),
-                        fc=(1.0, 1.0, 1.0), )
+            bbox = dict(
+                boxstyle="round",
+                ec=(1.0, 1.0, 1.0),
+                fc=(1.0, 1.0, 1.0),
+            )
         label = str(label)  # this makes "1" and 1 labeled the same
 
         # set optional alignment
-        horizontalalignment = kwds.get('horizontalalignment', 'center')
-        verticalalignment = kwds.get('verticalalignment', 'center')
+        horizontalalignment = kwds.get("horizontalalignment", "center")
+        verticalalignment = kwds.get("verticalalignment", "center")
 
-        t = ax.text(x, y, label, size=font_size, color=font_color,
-                    family=font_family, weight=font_weight, alpha=alpha,
-                    horizontalalignment=horizontalalignment,
-                    verticalalignment=verticalalignment, rotation=trans_angle,
-                    transform=ax.transData, bbox=bbox, zorder=1)
+        t = ax.text(
+            x,
+            y,
+            label,
+            size=font_size,
+            color=font_color,
+            family=font_family,
+            weight=font_weight,
+            alpha=alpha,
+            horizontalalignment=horizontalalignment,
+            verticalalignment=verticalalignment,
+            rotation=trans_angle,
+            transform=ax.transData,
+            bbox=bbox,
+            zorder=1,
+        )
         text_items[(n1, n2, k)] = t
 
     return text_items
 
 
-def draw(g: Union[DecayGraph, ReactionGraph],
-         pos: Dict[Hashable, Tuple[float, float]] = None, ax=None,
-         delimiter: str = r'$\rightarrow$', with_labels: bool = True, **kwds):
+def draw(
+    g: Union[DecayGraph, ReactionGraph],
+    pos: Dict[Hashable, Tuple[float, float]] = None,
+    ax=None,
+    delimiter: str = r"$\rightarrow$",
+    with_labels: bool = True,
+    **kwds,
+):
     """A networkx.draw wrapper that gives a physics-like graph structure.
 
     Most of the code is taken from networkx's draw, but it isn't good for us
@@ -177,7 +204,7 @@ def draw(g: Union[DecayGraph, ReactionGraph],
         print("Matplotlib unable to open display")
         raise
 
-    rc('text', usetex=True)
+    rc("text", usetex=True)
 
     pos = pos or {iso: (3 * iso.A + iso.m, iso.Z) for iso in g}
 
@@ -185,7 +212,7 @@ def draw(g: Union[DecayGraph, ReactionGraph],
         cf = plt.gcf()
     else:
         cf = ax.get_figure()
-    cf.set_facecolor('w')
+    cf.set_facecolor("w")
     if ax is None:
         # noinspection PyProtectedMember
         if cf._axstack() is None:
@@ -194,7 +221,6 @@ def draw(g: Union[DecayGraph, ReactionGraph],
             ax = cf.gca()
 
     labels = {(u, v, k): delimiter.join(k) for u, v, k in g.edges}
-    draw_multigraph_edge_labels(g, pos=pos, ax=ax, label_pos=0.8,
-                                edge_labels=labels, **kwds)
+    draw_multigraph_edge_labels(g, pos=pos, ax=ax, label_pos=0.8, edge_labels=labels, **kwds)
     nx.draw_networkx(g, pos=pos, with_labels=with_labels, ax=ax, **kwds)
     return

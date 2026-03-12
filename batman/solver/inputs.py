@@ -1,6 +1,4 @@
-"""Tools used to create input for the batman package solvers.
-
-"""
+"""Tools used to create input for the batman package solvers."""
 
 import logging
 from abc import abstractmethod
@@ -20,20 +18,17 @@ from batman.units import EV, EV_TO_MJ, MJ, MW, Volume
 from .power_normalization import add_two, calc_norm, single_power_produced
 from .utils import DepletionData, RunData, append_doc_of
 
-ModelData = Tuple[DecayGraph, Iterable[ReactionRate], GraphFilter,
-                  FrozenSet[ZAID]]
-ComponentData = Tuple[DecayGraph, Iterable[ReactionRate], GraphFilter,
-                      Mixture, Volume, FrozenSet[ZAID]]
+ModelData = Tuple[DecayGraph, Iterable[ReactionRate], GraphFilter, FrozenSet[ZAID]]
+ComponentData = Tuple[DecayGraph, Iterable[ReactionRate], GraphFilter, Mixture, Volume, FrozenSet[ZAID]]
 BurnData = Iterable[ModelData]
 
-modlogger = logging.getLogger('batman.expo.input')
-T = TypeVar('T')
+modlogger = logging.getLogger("batman.expo.input")
+T = TypeVar("T")
 
 
 class FiniteIterable(Iterable[T], Sized, Protocol):
-    """An iterable that is guaranteed to end at some point
+    """An iterable that is guaranteed to end at some point"""
 
-    """
     pass
 
 
@@ -70,6 +65,7 @@ class InputData:
     if you want to. Please don't say I didn't warn you.
 
     """
+
     decay_models: Sequence[DecayGraph]
     reaction_models: Sequence[Iterable[ReactionRate]]
     filters: Sequence[GraphFilter]
@@ -78,60 +74,62 @@ class InputData:
     accumulates: Sequence[FrozenSet[ZAID]] = None
 
     def __post_init__(self):
-        self.accumulates = (self.accumulates
-                            or [frozenset() for _ in range(len(self))])
+        self.accumulates = self.accumulates or [frozenset() for _ in range(len(self))]
         try:
-            assert (len(self.decay_models) == len(self.reaction_models)
-                    == len(self.filters) == len(self.mixtures)
-                    == len(self.volumes) == len(self.accumulates))
+            assert (
+                len(self.decay_models)
+                == len(self.reaction_models)
+                == len(self.filters)
+                == len(self.mixtures)
+                == len(self.volumes)
+                == len(self.accumulates)
+            )
         except AssertionError as e:
             raise ValueError(
                 "Length of all sequences in the input data must "
-                "be identical.:" +
-                '\n'.join(
-                    [f"{title}:{len(seq)}"
-                     for title, seq in zip(
-                        ['decay', 'reaction', 'filter',
-                         'mixture', 'volume', 'accumulates'],
-                        [self.decay_models, self.reaction_models,
-                         self.filters, self.mixtures, self.volumes,
-                         self.accumulates])]
-                    )
-                ) from e
+                "be identical.:"
+                + "\n".join(
+                    [
+                        f"{title}:{len(seq)}"
+                        for title, seq in zip(
+                            ["decay", "reaction", "filter", "mixture", "volume", "accumulates"],
+                            [
+                                self.decay_models,
+                                self.reaction_models,
+                                self.filters,
+                                self.mixtures,
+                                self.volumes,
+                                self.accumulates,
+                            ],
+                        )
+                    ]
+                )
+            ) from e
 
     def __iter__(self) -> Generator[ComponentData, None, None]:
-        yield from zip(self.decay_models,
-                       self.reaction_models,
-                       self.filters,
-                       self.mixtures,
-                       self.volumes,
-                       self.accumulates)
+        yield from zip(
+            self.decay_models, self.reaction_models, self.filters, self.mixtures, self.volumes, self.accumulates
+        )
 
     def to_burndata(self):
-        """Make the sub-info BurnData out of this one.
-
-        """
-        return zip(self.decay_models, self.reaction_models,
-                   self.filters, self.accumulates)
+        """Make the sub-info BurnData out of this one."""
+        return zip(self.decay_models, self.reaction_models, self.filters, self.accumulates)
 
     def __len__(self):
         return len(self.mixtures)
 
 
-Td = TypeVar('Td', bound="EasyData")
+Td = TypeVar("Td", bound="EasyData")
 
 
 class EasyData(Protocol):
-    """Protocol for how data for the depletion algorithms should look like.
-
-    """
+    """Protocol for how data for the depletion algorithms should look like."""
 
     mixtures: Sequence[Mixture]
 
     @classmethod
     @abstractmethod
-    def from_input(cls: Type[Td], data: InputData, *, dtype: str = 'float64') \
-            -> Td:
+    def from_input(cls: Type[Td], data: InputData, *, dtype: str = "float64") -> Td:
         """Make EasyData from InputData
 
         Parameters
@@ -156,14 +154,12 @@ class EasyData(Protocol):
         The normalization factor used for re-normalization.
 
         """
-        decp, reacp = self.powers(norm=1.)
-        norm = self.calc_norm(p, decp, reacp,
-                              decay_power_allowed=decay_power_allowed)
+        decp, reacp = self.powers(norm=1.0)
+        norm = self.calc_norm(p, decp, reacp, decay_power_allowed=decay_power_allowed)
         return norm
 
     # noinspection PyMethodMayBeStatic
-    def calc_norm(self, p: MW, decp: MW, reacp: MW,
-                  decay_power_allowed: bool) -> float:
+    def calc_norm(self, p: MW, decp: MW, reacp: MW, decay_power_allowed: bool) -> float:
         """Method used to calculate the normalization factor needed to achieve
         power p
 
@@ -176,8 +172,7 @@ class EasyData(Protocol):
                               power.
 
         """
-        return calc_norm(p, decp, reacp,
-                         decay_power_allowed=decay_power_allowed)
+        return calc_norm(p, decp, reacp, decay_power_allowed=decay_power_allowed)
 
     def power(self, norm: float) -> MW:
         """Get the power at the current normalization and state
@@ -197,9 +192,7 @@ class EasyData(Protocol):
         ----------
         norm - Normalization factor for the reaction models.
         """
-        return self.map_reduce(partial(single_power_produced, norm=norm),
-                               add_two,
-                               initial=(0., 0.))
+        return self.map_reduce(partial(single_power_produced, norm=norm), add_two, initial=(0.0, 0.0))
 
     @abstractmethod
     def __iter__(self) -> Generator[RunData, None, None]:
@@ -226,9 +219,7 @@ class EasyData(Protocol):
         raise NotImplementedError
 
     @abstractmethod
-    def map_reduce(self, fmap: Callable[[RunData], T],
-                   freduce: Callable[[T, T], T], *,
-                   initial: T) -> T:
+    def map_reduce(self, fmap: Callable[[RunData], T], freduce: Callable[[T, T], T], *, initial: T) -> T:
         """Map a function over this object and then reduce it.
 
         Parameters
@@ -250,22 +241,18 @@ class SerialEasyData:
 
     """
 
-    def __init__(self, *, datagen: Iterable[RunData] = (),
-                 _models=None, _mixtures=None, _volumes=None):
+    def __init__(self, *, datagen: Iterable[RunData] = (), _models=None, _mixtures=None, _volumes=None):
         given = (_models, _mixtures, _volumes)
         self.models, self.mixtures, self.volumes = (
-            tuple(tuple(i) for i in given) if all(given)
-            else map(tuple, zip(*tuple(datagen)))
-            )
+            tuple(tuple(i) for i in given) if all(given) else map(tuple, zip(*tuple(datagen)))
+        )
 
     def __deepcopy__(self, memo: dict):
         mixtures = (deepcopy(mixture) for mixture in self.mixtures)
-        return type(self)(_models=self.models, _mixtures=mixtures,
-                          _volumes=self.volumes)
+        return type(self)(_models=self.models, _mixtures=mixtures, _volumes=self.volumes)
 
     @classmethod
-    def from_input(cls: Type[Td], data: InputData, *, dtype: str = 'float64') \
-            -> Td:
+    def from_input(cls: Type[Td], data: InputData, *, dtype: str = "float64") -> Td:
         """Make SerialEasyData from InputData
 
         Parameters
@@ -316,16 +303,12 @@ class SerialEasyData:
         yield from map(func, iter(self))
 
     @append_doc_of(EasyData.map_reduce)
-    def map_reduce(self, fmap: Callable[[RunData], T],
-                   freduce: Callable[[T, T], T], *,
-                   initial: T) -> T:
-        """Docstring taken from the Protocol class: EasyData.map_reduce:
-        """
+    def map_reduce(self, fmap: Callable[[RunData], T], freduce: Callable[[T, T], T], *, initial: T) -> T:
+        """Docstring taken from the Protocol class: EasyData.map_reduce:"""
         return reduce(freduce, self.map(fmap), initial)
 
 
-def make_run_data(data: InputData, *,
-                  dtype: str = 'float64') -> Generator[RunData, None, None]:
+def make_run_data(data: InputData, *, dtype: str = "float64") -> Generator[RunData, None, None]:
     """Create the data used to run stuff in this package from user input
 
     Parameters
@@ -334,14 +317,10 @@ def make_run_data(data: InputData, *,
     dtype - NumPy type string.
 
     """
-    yield from zip(make_depletion_models(data.to_burndata(), dtype=dtype),
-                   data.mixtures,
-                   data.volumes)
+    yield from zip(make_depletion_models(data.to_burndata(), dtype=dtype), data.mixtures, data.volumes)
 
 
-def make_depletion_models(data: BurnData, *,
-                          dtype: str = 'float64') -> \
-        Generator[DepletionData, None, None]:
+def make_depletion_models(data: BurnData, *, dtype: str = "float64") -> Generator[DepletionData, None, None]:
     """Generator for depletion models given the initial data.
 
     Parameters
@@ -353,12 +332,8 @@ def make_depletion_models(data: BurnData, *,
 
     for dg, rr, filt, accumulate in data:
         isos, decmat, rg_filter = depletion_model(
-            dg,
-            frozenset(r.reaction for r in rr),
-            filt,
-            dtype=dtype,
-            accumulate=accumulate)
+            dg, frozenset(r.reaction for r in rr), filt, dtype=dtype, accumulate=accumulate
+        )
         reacts = filter(rg_filter, rr)
-        reacmat = ReactionModel(isos=isos, reactions=reacts, dtype=dtype,
-                                accumulate=accumulate)
+        reacmat = ReactionModel(isos=isos, reactions=reacts, dtype=dtype, accumulate=accumulate)
         yield isos, decmat, reacmat

@@ -2,6 +2,7 @@
 data
 
 """
+
 import operator
 from functools import partial
 
@@ -12,8 +13,7 @@ from batman.units import MW
 from .inputs import EasyData
 from .utils import RunData, mixture_to_nd
 
-__all__ = ['estimate_k', 'calculate_losses', 'deriv_k', 'absorption',
-           'production', 'calculate_loss_factor']
+__all__ = ["estimate_k", "calculate_losses", "deriv_k", "absorption", "production", "calculate_loss_factor"]
 
 
 def estimate_k(data: EasyData, loss_factor: float) -> float:
@@ -36,7 +36,7 @@ def estimate_k(data: EasyData, loss_factor: float) -> float:
     """
 
     prod = production(data)
-    return prod / (absorption(data) + loss_factor*prod)
+    return prod / (absorption(data) + loss_factor * prod)
 
 
 def production(data: EasyData) -> float:
@@ -47,9 +47,7 @@ def production(data: EasyData) -> float:
     data - Batman solving data.
 
     """
-    return data.map_reduce(partial(_get_from_single, attribute='production'),
-                           operator.add,
-                           initial=0.)
+    return data.map_reduce(partial(_get_from_single, attribute="production"), operator.add, initial=0.0)
 
 
 def absorption(data: EasyData) -> float:
@@ -60,15 +58,13 @@ def absorption(data: EasyData) -> float:
     data - Batman solving data.
 
     """
-    return data.map_reduce(partial(_get_from_single, attribute='absorption'),
-                           operator.add,
-                           initial=0.)
+    return data.map_reduce(partial(_get_from_single, attribute="absorption"), operator.add, initial=0.0)
 
 
 def _get_from_single(data: RunData, attribute: str) -> float:
     (isos, _, reacmodel), mixture, vol = data
     nd = mixture_to_nd(mixture, isos, dtype=reacmodel.dtype)
-    return vol*getattr(reacmodel, attribute)(nd=nd)
+    return vol * getattr(reacmodel, attribute)(nd=nd)
 
 
 def calculate_losses(data: EasyData, k: float) -> float:
@@ -100,8 +96,7 @@ def calculate_loss_factor(data: EasyData, k: float) -> float:
 
     """
 
-    return _calculate_loss_factor(prod0=production(data),
-                                  loss0=calculate_losses(data, k))
+    return _calculate_loss_factor(prod0=production(data), loss0=calculate_losses(data, k))
 
 
 def _calculate_loss_factor(prod0: float, loss0: float):
@@ -120,11 +115,10 @@ def _calculate_loss_factor(prod0: float, loss0: float):
     The unmodeled loss to production ratio.
 
     """
-    return loss0/prod0
+    return loss0 / prod0
 
 
-def deriv_k(data: EasyData, *, loss_factor: float, p: MW,
-            _norm: float = 0.0) -> float:
+def deriv_k(data: EasyData, *, loss_factor: float, p: MW, _norm: float = 0.0) -> float:
     r"""Estimate the time derivative of the eigenvalue with the current data.
 
     Derivative follows:
@@ -153,19 +147,14 @@ def deriv_k(data: EasyData, *, loss_factor: float, p: MW,
     """
     norm = _norm or data.normalize(p=p, decay_power_allowed=False)
     totprod = production(data)
-    totabs = absorption(data) + loss_factor*totprod
-    _deriv = partial(_deriv_k_single, norm=norm, absorb=totabs, prod=totprod,
-                     loss_factor=loss_factor)
-    return data.map_reduce(_deriv, operator.add, initial=0.)
+    totabs = absorption(data) + loss_factor * totprod
+    _deriv = partial(_deriv_k_single, norm=norm, absorb=totabs, prod=totprod, loss_factor=loss_factor)
+    return data.map_reduce(_deriv, operator.add, initial=0.0)
 
 
-def _deriv_k_single(data: RunData, *,
-                    norm: float, absorb: float, prod: float,
-                    loss_factor: float) -> float:
+def _deriv_k_single(data: RunData, *, norm: float, absorb: float, prod: float, loss_factor: float) -> float:
     (isos, decm, reacm), mix, vol = data
     nd = mixture_to_nd(mixture=mix, isos=isos, dtype=reacm.dtype)
-    dkdn = (vol*((absorb-prod*loss_factor)*reacm.prod_model
-                 - prod*reacm.absorption_model)
-            / (absorb**2))
-    dndt = (decm.mat + (norm*reacm.mat)) @ nd
+    dkdn = vol * ((absorb - prod * loss_factor) * reacm.prod_model - prod * reacm.absorption_model) / (absorb**2)
+    dndt = (decm.mat + (norm * reacm.mat)) @ nd
     return float(np.dot(dkdn, dndt))

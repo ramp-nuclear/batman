@@ -1,6 +1,5 @@
-"""Model creation tools
+"""Model creation tools"""
 
-"""
 from functools import lru_cache
 from typing import Callable, FrozenSet, Sequence, Tuple
 
@@ -14,18 +13,18 @@ from batman.graphs.reaction import ReactionGraph
 
 from .decaymodel import DecayModel
 
-DepletionModel = Tuple[Sequence[ZAID],
-                       DecayModel,
-                       Callable[[ReactionRate], bool]]
+DepletionModel = Tuple[Sequence[ZAID], DecayModel, Callable[[ReactionRate], bool]]
 
 
 @lru_cache(maxsize=5)
-def depletion_model(dg: DecayGraph,
-                    reacts: FrozenSet[ReactionType],
-                    _filter: GraphFilter, *,
-                    dtype: str = 'float64',
-                    accumulate: FrozenSet[ZAID] = frozenset()
-                    ) -> DepletionModel:
+def depletion_model(
+    dg: DecayGraph,
+    reacts: FrozenSet[ReactionType],
+    _filter: GraphFilter,
+    *,
+    dtype: str = "float64",
+    accumulate: FrozenSet[ZAID] = frozenset(),
+) -> DepletionModel:
     """Generate the depletion model for some composition's data. This model
     includes which isotopes are to burn (and at what order), their decay
     matrix and the filtered reaction graph.
@@ -47,9 +46,11 @@ def depletion_model(dg: DecayGraph,
     """
 
     rg = ReactionGraph()
-    fake_rates = (ReactionRate('moo', reaction_specific, 1., 0.)
-                  for reaction in reacts
-                  for reaction_specific, _ in reaction.branches())
+    fake_rates = (
+        ReactionRate("moo", reaction_specific, 1.0, 0.0)
+        for reaction in reacts
+        for reaction_specific, _ in reaction.branches()
+    )
     rg.add_edges_from_results(fake_rates)
     g = _filter(nx.compose(dg, rg))
 
@@ -59,11 +60,9 @@ def depletion_model(dg: DecayGraph,
     decmat = DecayModel(dg, isos, dtype=dtype, accumulate=accumulate)
 
     rg: ReactionGraph = rg.subgraph(isos)
-    edges = frozenset((parent, typus) for parent, _, typus in
-                      rg.edges(keys=True))
+    edges = frozenset((parent, typus) for parent, _, typus in rg.edges(keys=True))
 
     def _reacfilter(rr: ReactionRate) -> bool:
-        return any((r.parent, r.typus + str(r.target)) in edges for r in
-                   rr.expand())
+        return any((r.parent, r.typus + str(r.target)) in edges for r in rr.expand())
 
     return isos, decmat, _reacfilter

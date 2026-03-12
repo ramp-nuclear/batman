@@ -1,6 +1,5 @@
-"""Exponentiator agreed upon protocol
+"""Exponentiator agreed upon protocol"""
 
-"""
 from typing import Callable, Protocol
 
 from numpy import ndarray
@@ -17,6 +16,5 @@ class Exponentiator(Protocol):
 
     """
 
-    def __call__(self, d: csr_matrix, r: csr_matrix, flux: FluxFunc,
-                 n0: ndarray, dt: Second) -> ndarray:
+    def __call__(self, d: csr_matrix, r: csr_matrix, flux: FluxFunc, n0: ndarray, dt: Second) -> ndarray:
         raise NotImplementedError

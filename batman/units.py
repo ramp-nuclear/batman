@@ -1,6 +1,5 @@
-"""Types used to represent physical units
+"""Types used to represent physical units"""
 
-"""
 import numpy as np
 from scipy.constants import eV
 

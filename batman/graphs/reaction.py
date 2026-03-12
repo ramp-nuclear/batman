@@ -3,6 +3,7 @@ held in nodes and edges, and in that fact that they cannot be auto-generated,
 and must be introduced externally, so their API should probably be nicer.
 
 """
+
 from typing import Hashable, Iterable, NoReturn
 
 import networkx as nx
@@ -10,18 +11,16 @@ from reactions import ReactionRate
 
 from batman.units import CMBarnPerSecond
 
-NGAMMA = r'(n,$\gamma$)'
-FISSION = '(n,f)'
+NGAMMA = r"(n,$\gamma$)"
+FISSION = "(n,f)"
 
 
 class ReactionGraph(nx.MultiDiGraph):
-    """A nuclear reaction graph of processes between isotopes.
+    """A nuclear reaction graph of processes between isotopes."""
 
-    """
-
-    def add_edge(self, u_of_edge, v_of_edge, key: Hashable = None,
-                 rate: CMBarnPerSecond = None, _strict: bool = False,
-                 **attr) -> Hashable:
+    def add_edge(
+        self, u_of_edge, v_of_edge, key: Hashable = None, rate: CMBarnPerSecond = None, _strict: bool = False, **attr
+    ) -> Hashable:
         """See nx.MultiDiGraph.add_edge for details
 
         u_of_edge - source isotope
@@ -50,9 +49,8 @@ class ReactionGraph(nx.MultiDiGraph):
         if not attr and not _strict and rate is None:
             return super().add_edge(u_of_edge, v_of_edge, key=key)
         if rate is None:
-            raise TypeError("Must set the reaction rate properly. None is "
-                            "unsupported.")
-        attr['rate'] = rate
+            raise TypeError("Must set the reaction rate properly. None is unsupported.")
+        attr["rate"] = rate
         return super().add_edge(u_of_edge, v_of_edge, key=key, **attr)
 
     def add_edge_from_result(self, result: ReactionRate) -> NoReturn:
@@ -63,15 +61,14 @@ class ReactionGraph(nx.MultiDiGraph):
         result - Common protocol for a reaction rate result object.
 
         """
-        self.add_edge(result.parent, result.target,
-                      key=result.typus + str(result.target),
-                      energy=result.energy, rate=result.rate)
-        self.add_edge(result.parent, result.parent,
-                      key=result.typus + str(result.target),
-                      energy=result.energy, rate=-result.rate)
+        self.add_edge(
+            result.parent, result.target, key=result.typus + str(result.target), energy=result.energy, rate=result.rate
+        )
+        self.add_edge(
+            result.parent, result.parent, key=result.typus + str(result.target), energy=result.energy, rate=-result.rate
+        )
 
-    def add_edges_from_results(self,
-                               results: Iterable[ReactionRate]) -> NoReturn:
+    def add_edges_from_results(self, results: Iterable[ReactionRate]) -> NoReturn:
         """Outer API for adding edges using an iterable of results.
 
         Parameters
@@ -82,7 +79,7 @@ class ReactionGraph(nx.MultiDiGraph):
         for result in results:
             self.add_edge_from_result(result)
 
-    def renormalize(self, factor: float) -> 'ReactionGraph':
+    def renormalize(self, factor: float) -> "ReactionGraph":
         """Used to multiply all the reaction rates by a single factor.
 
         This is a commonly used utility, so it was given its own method.
@@ -94,5 +91,5 @@ class ReactionGraph(nx.MultiDiGraph):
         """
 
         for _, _, d in self.edges.data():
-            d['rate'] *= factor
+            d["rate"] *= factor
         return self

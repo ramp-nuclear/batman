@@ -1,6 +1,5 @@
-"""High level methods for solving the Bateman equation
+"""High level methods for solving the Bateman equation"""
 
-"""
 import logging
 from copy import deepcopy
 from dataclasses import dataclass
@@ -26,15 +25,12 @@ DenArray = np.ndarray
 IsoData = Dict[ZAID, Tuple[MW, PerSecond]]
 PowerGuess = Callable[[Second, MW, MW, MW], Second]
 
-__all__ = ['timestep_constant_power', 'timestep_constant_flux', 'Configuration',
-           'depstep_single', 'BurnResult']
+__all__ = ["timestep_constant_power", "timestep_constant_flux", "Configuration", "depstep_single", "BurnResult"]
 
-modlogger = logging.getLogger('batman.solve')
+modlogger = logging.getLogger("batman.solve")
 
 
-def depstep_single(data: RunData, t: Second, norm: FluxFunc, *,
-                   expo: Exponentiator,
-                   threshold: float) -> Mixture:
+def depstep_single(data: RunData, t: Second, norm: FluxFunc, *, expo: Exponentiator, threshold: float) -> Mixture:
     """Perform a depletion step for a single component's RunData.
 
     Parameters
@@ -55,12 +51,10 @@ def depstep_single(data: RunData, t: Second, norm: FluxFunc, *,
     nd = mixture_to_nd(mixture=mixture, isos=isos, dtype=decmodel.mat.dtype)
     sol = expo(decmodel.mat, reacmodel.mat, norm, nd, t)
     isos = mixture.isotopes | {k: v for k, v in zip(isos, sol)}
-    return Mixture({k: v for k, v in isos.items() if v > threshold},
-                   mixture.temperature,
-                   mixture.sab)
+    return Mixture({k: v for k, v in isos.items() if v > threshold}, mixture.temperature, mixture.sab)
 
 
-EasyType = TypeVar('EasyType', bound=EasyData)
+EasyType = TypeVar("EasyType", bound=EasyData)
 
 
 class Configuration:
@@ -88,13 +82,18 @@ class Configuration:
 
     """
 
-    def __init__(self, *, p_rtol: float, p_atol: MW,
-                 decay_power_allowed: bool = True,
-                 integrator: Callable,
-                 expo: Exponentiator = Cram,
-                 time_guesser: Callable,
-                 threshold: float,
-                 guess_correction: Callable = halfstep):
+    def __init__(
+        self,
+        *,
+        p_rtol: float,
+        p_atol: MW,
+        decay_power_allowed: bool = True,
+        integrator: Callable,
+        expo: Exponentiator = Cram,
+        time_guesser: Callable,
+        threshold: float,
+        guess_correction: Callable = halfstep,
+    ):
         self.p_rtol = p_rtol
         self.p_atol = p_atol
         self.decay_power_allowed = decay_power_allowed
@@ -104,20 +103,11 @@ class Configuration:
         self.time_guesser = time_guesser
         self.guess_correction = guess_correction
 
-    def depstepper(self, data: EasyData,
-                   t: Second, norm: FluxFunc) -> Sequence[Mixture]:
-        """Do a single burnup step at a given flux level.
-        """
-        return self.integrator(data, t, norm,
-                               stepper=depstep_single,
-                               expo=self.expo,
-                               threshold=self.threshold)
+    def depstepper(self, data: EasyData, t: Second, norm: FluxFunc) -> Sequence[Mixture]:
+        """Do a single burnup step at a given flux level."""
+        return self.integrator(data, t, norm, stepper=depstep_single, expo=self.expo, threshold=self.threshold)
 
-    def first_guess(self,
-                    data: EasyData,
-                    t: Second,
-                    p: MW,
-                    norm: Optional[float] = None) -> Second:
+    def first_guess(self, data: EasyData, t: Second, p: MW, norm: Optional[float] = None) -> Second:
         """Make an initial guess for the timestep to take given the data at
         hand.
 
@@ -130,14 +120,10 @@ class Configuration:
 
         """
         with capture_warnings():
-            return self.time_guesser(data, t, p,
-                                     atol=self.p_atol,
-                                     rtol=self.p_rtol,
-                                     norm=norm)
+            return self.time_guesser(data, t, p, atol=self.p_atol, rtol=self.p_rtol, norm=norm)
 
 
-def timestep_constant_flux(data: EasyData, norm: float, t: Second, *,
-                           config: Configuration) -> Sequence[Mixture]:
+def timestep_constant_flux(data: EasyData, norm: float, t: Second, *, config: Configuration) -> Sequence[Mixture]:
     """Do a burnup step, such that the flux is constant within the timestep.
 
     Parameters
@@ -164,6 +150,7 @@ class BurnResult:
     derivative estimate.
 
     """
+
     steps: int
     time: timedelta
     last_norm: float
@@ -172,15 +159,13 @@ class BurnResult:
 
     @classmethod
     def empty(cls, **kwargs):
-        """Return an empty result
-
-        """
-        return cls(0, timedelta(0.), 1., **kwargs)
+        """Return an empty result"""
+        return cls(0, timedelta(0.0), 1.0, **kwargs)
 
     @property
     def rho(self) -> Optional[PCM]:
         """Reactivity in PCM"""
-        return self.k and 1e5*(1. - 1./self.k)
+        return self.k and 1e5 * (1.0 - 1.0 / self.k)
 
     @property
     def drhodt(self) -> Optional[PCMPerSecond]:
@@ -196,18 +181,20 @@ class BurnResult:
             return None
 
     def __add__(self, other: "BurnResult") -> "BurnResult":
-        return BurnResult(self.steps + other.steps, self.time + other.time,
-                          other.last_norm, other.k, other.dkdt)
+        return BurnResult(self.steps + other.steps, self.time + other.time, other.last_norm, other.k, other.dkdt)
 
     def __radd__(self, other: "BurnResult") -> "BurnResult":
-        return BurnResult(self.steps + other.steps, self.time + other.time,
-                          self.last_norm, self.k, self.dkdt)
+        return BurnResult(self.steps + other.steps, self.time + other.time, self.last_norm, self.k, self.dkdt)
 
 
-def _step_constant_power(data: EasyData, p: MW, tstep: Second, *,
-                         config: Configuration,
-                         loss_fac: Optional[float],
-                         ) -> Tuple[Sequence[Mixture], BurnResult]:
+def _step_constant_power(
+    data: EasyData,
+    p: MW,
+    tstep: Second,
+    *,
+    config: Configuration,
+    loss_fac: Optional[float],
+) -> Tuple[Sequence[Mixture], BurnResult]:
     """Do one burnup step, such that the total power is constant within the
     timestep.
 
@@ -226,36 +213,27 @@ def _step_constant_power(data: EasyData, p: MW, tstep: Second, *,
     decp, reacp = cpy.powers(norm)
     kest = loss_fac and estimate_k(cpy, loss_factor=loss_fac)
     dkdt = loss_fac and deriv_k(cpy, loss_factor=loss_fac, p=p, _norm=norm)
-    if (isclose(decp + reacp, p,
-                rel_tol=config.p_rtol,
-                abs_tol=config.p_atol)
-            or p == reacp == 0.):
-        modlogger.info(
-            f"The power was {decp + reacp:.8e}, which was deemed "
-            f"close enough to {p:.8e}")
-        return cpy.mixtures, BurnResult(1, timedelta(seconds=tstep), norm,
-                                        k=kest, dkdt=dkdt)
+    if isclose(decp + reacp, p, rel_tol=config.p_rtol, abs_tol=config.p_atol) or p == reacp == 0.0:
+        modlogger.info(f"The power was {decp + reacp:.8e}, which was deemed close enough to {p:.8e}")
+        return cpy.mixtures, BurnResult(1, timedelta(seconds=tstep), norm, k=kest, dkdt=dkdt)
     else:
         del cpy
-        modlogger.info(f"Time step failed. Was {tstep / day:.3f} days. "
-                       f"Power was {decp + reacp:.8e} instead of {p:.8e}")
-        small_step = config.guess_correction(t=tstep, p=p, decp=decp,
-                                             reacp=reacp)
-        modlogger.info(f"Trying a smaller step of {small_step / day:.3f} "
-                       "days.")
-        mixtures, result = _step_constant_power(data, p=p,
-                                                tstep=small_step,
-                                                config=config,
-                                                loss_fac=loss_fac)
-        return (mixtures,
-                BurnResult(1, timedelta(0.), norm, k=kest, dkdt=dkdt) + result)
+        modlogger.info(f"Time step failed. Was {tstep / day:.3f} days. Power was {decp + reacp:.8e} instead of {p:.8e}")
+        small_step = config.guess_correction(t=tstep, p=p, decp=decp, reacp=reacp)
+        modlogger.info(f"Trying a smaller step of {small_step / day:.3f} days.")
+        mixtures, result = _step_constant_power(data, p=p, tstep=small_step, config=config, loss_fac=loss_fac)
+        return (mixtures, BurnResult(1, timedelta(0.0), norm, k=kest, dkdt=dkdt) + result)
 
 
-def timestep_constant_power(data: EasyData, p: MW, t: Second, *,
-                            config: Configuration,
-                            loss_fac: Optional[float] = None,
-                            k0: Optional[float] = None,
-                            ) -> Tuple[Sequence[Mixture], BurnResult]:
+def timestep_constant_power(
+    data: EasyData,
+    p: MW,
+    t: Second,
+    *,
+    config: Configuration,
+    loss_fac: Optional[float] = None,
+    k0: Optional[float] = None,
+) -> Tuple[Sequence[Mixture], BurnResult]:
     """Perform burnup steps until you get to the desired burnup (power*time)
     while maintaining constant power within each step.
 
@@ -277,18 +255,14 @@ def timestep_constant_power(data: EasyData, p: MW, t: Second, *,
 
     onestep = config.first_guess(data=data, t=t, p=p)
     loss_fac = loss_fac or (k0 and calculate_loss_factor(data, k0))
-    modlogger.info(f'Trying a step of {onestep / day:.1f} Days '
-                   f'out of {t / day:.1f}')
+    modlogger.info(f"Trying a step of {onestep / day:.1f} Days out of {t / day:.1f}")
     next_data = deepcopy(data)
-    next_data.mixtures, initial_result = _step_constant_power(data, p=p,
-                                                              tstep=onestep,
-                                                              config=config,
-                                                              loss_fac=loss_fac)
+    next_data.mixtures, initial_result = _step_constant_power(
+        data, p=p, tstep=onestep, config=config, loss_fac=loss_fac
+    )
     tstep = initial_result.time.total_seconds()
     if isclose(tstep, t, rel_tol=1e-4, abs_tol=1e-10):
         return next_data.mixtures, initial_result
     else:
-        mixtures, result = timestep_constant_power(next_data, p=p, t=t-tstep,
-                                                   config=config,
-                                                   loss_fac=loss_fac)
+        mixtures, result = timestep_constant_power(next_data, p=p, t=t - tstep, config=config, loss_fac=loss_fac)
         return mixtures, initial_result + result
