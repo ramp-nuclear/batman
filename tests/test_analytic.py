@@ -10,6 +10,7 @@ from typing import Iterable
 import hypothesis.strategies as st
 import numpy as np
 import pytest
+from conftest import allclose, slow
 from coremaker.materials.mixture import Mixture
 from hypothesis import given, seed, settings
 from isotopes import I135, U235, Xe135
@@ -26,8 +27,6 @@ from batman.solver import Configuration, InputData, timestep_constant_power
 from batman.solver import SerialEasyData as EasyData
 from batman.solver.time_est import max_step_initial_correct_predictor as tguess
 from batman.units import CM3, EV_TO_MJ, MW, Second
-
-from .conftest import allclose, slow
 
 U235FISS_ENER = 200e6  # eV
 Day = float
