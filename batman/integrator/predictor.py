@@ -2,7 +2,7 @@
 
 from functools import partial
 from math import exp
-from typing import Sequence
+from typing import Callable, Sequence
 
 from coremaker.protocols.mixture import Mixture
 
@@ -13,7 +13,13 @@ from batman.units import Second
 
 
 def predictor(
-    data: EasyData, t: Second, norm: float, *, stepper, expo: Exponentiator, threshold: float
+    data: EasyData,
+    t: Second,
+    norm: Callable[[float], float],
+    *,
+    stepper,
+    expo: Exponentiator,
+    threshold: float,
 ) -> Sequence[Mixture]:
     """Predictor that assumes the flux is at the level normalized at the start.
 
@@ -35,7 +41,13 @@ def predictor(
 
 
 def energy_conserving_predictor(
-    data: EasyData, t: Second, norm: float, *, stepper, expo: Exponentiator, threshold: float
+    data: EasyData,
+    t: Second,
+    norm: Callable[[float], float],
+    *,
+    stepper,
+    expo: Exponentiator,
+    threshold: float,
 ) -> Sequence[Mixture]:
     r"""Predictor that tries to conserve the energy emitted within the time step
     even though the power could decay as fuel is burnt if the flux is kept constant.
@@ -72,11 +84,12 @@ def energy_conserving_predictor(
     """
 
     try:
-        assert norm > 0.0
-        dpdt = deriv_p(data, norm=norm)
-        p0 = data.power(norm=norm)
+        n = norm(0)
+        assert n > 0.0, n
+        dpdt = deriv_p(data, norm=n)
+        p0 = data.power(norm=n)
         a = -dpdt / p0
         fac = a * t / (1.0 - exp(-a * t))
     except (AssertionError, ZeroDivisionError):
         fac = 1.0
-    return predictor(data, t, norm=fac * norm, stepper=stepper, expo=expo, threshold=threshold)
+    return predictor(data, t, norm=lambda _: fac * n, stepper=stepper, expo=expo, threshold=threshold)

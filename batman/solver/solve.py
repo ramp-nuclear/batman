@@ -5,7 +5,7 @@ from copy import deepcopy
 from dataclasses import dataclass
 from datetime import timedelta
 from math import isclose
-from typing import Callable, Dict, Optional, Sequence, Tuple, TypeVar
+from typing import Callable, Optional, Sequence, TypeVar
 
 import numpy as np
 from coremaker.materials.mixture import Mixture
@@ -22,7 +22,7 @@ from .time_est import halfstep
 from .utils import RunData, capture_warnings, mixture_to_nd
 
 DenArray = np.ndarray
-IsoData = Dict[ZAID, Tuple[MW, PerSecond]]
+IsoData = dict[ZAID, tuple[MW, PerSecond]]
 PowerGuess = Callable[[Second, MW, MW, MW], Second]
 
 __all__ = ["timestep_constant_power", "timestep_constant_flux", "Configuration", "depstep_single", "BurnResult"]
@@ -194,7 +194,7 @@ def _step_constant_power(
     *,
     config: Configuration,
     loss_fac: Optional[float],
-) -> Tuple[Sequence[Mixture], BurnResult]:
+) -> tuple[Sequence[Mixture], BurnResult]:
     """Do one burnup step, such that the total power is constant within the
     timestep.
 
@@ -233,7 +233,7 @@ def timestep_constant_power(
     config: Configuration,
     loss_fac: Optional[float] = None,
     k0: Optional[float] = None,
-) -> Tuple[Sequence[Mixture], BurnResult]:
+) -> tuple[Sequence[Mixture], BurnResult]:
     """Perform burnup steps until you get to the desired burnup (power*time)
     while maintaining constant power within each step.
 
