@@ -15,8 +15,6 @@ correct up to 5th order in t. This version uses 2 CRAM operations per time step.
 
 """
 
-from typing import Iterable
-
 import numpy as np
 import scipy.sparse as sp
 
@@ -26,10 +24,6 @@ from batman.units import Second
 from .ipfcram import IPFCramSolver, _ipf_cram
 
 __all__ = ["CF3Magnus2IPFCRAM"]
-
-
-def _weighted_mean(a: Iterable[float], f: Iterable[float]) -> float:
-    return sum(va * vf for va, vf in zip(a, f)) / sum(a)
 
 
 class CF3Magnus2IPFCRAM(IPFCramSolver):
@@ -56,9 +50,10 @@ class CF3Magnus2IPFCRAM(IPFCramSolver):
         h1, h2 = 0.5 + np.sqrt(3.0) / 6, 0.5 - np.sqrt(3.0) / 6
         f1, f2 = flux(h1 * dt), flux(h2 * dt)
         a1, a2 = (3 - 2 * np.sqrt(3)) / 12, (3 + 2 * np.sqrt(3)) / 12
-        bdiff = _weighted_mean((a2, a1), (f1, f2))
-        bsame = _weighted_mean((a1, a2), (f1, f2))
-        m = sp.csr_matrix((dt / 2) * (d + bdiff * r), dtype=np.float64)
+        asum = a1 + a2
+        bdiff = a2 * f1 + a1 * f2
+        bsame = a1 * f1 + a2 * f2
+        m = sp.csr_matrix(dt * (asum * d + bdiff * r), dtype=np.float64)
         y = _ipf_cram(
             m,
             np.array(n0, dtype=np.float64),
@@ -68,5 +63,13 @@ class CF3Magnus2IPFCRAM(IPFCramSolver):
             solver=self.solver,
             **self.kw,
         )
-        m = sp.csr_matrix((dt / 2) * (d + bsame * r), dtype=np.float64)
-        return _ipf_cram(m, y, alpha0=self.alpha0, alpha=self.alpha, theta=self.theta, solver=self.solver, **self.kw)
+        m = sp.csr_matrix(dt * (asum * d + bsame * r), dtype=np.float64)
+        return _ipf_cram(
+            m,
+            y,
+            alpha0=self.alpha0,
+            alpha=self.alpha,
+            theta=self.theta,
+            solver=self.solver,
+            **self.kw,
+        )
