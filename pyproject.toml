@@ -44,6 +44,7 @@ dependencies = [
 test = [
     "hypothesis",
     "pytest",
+    "pytest-cov",
 ]
 
 [tool.setuptools.packages.find]
